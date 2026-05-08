@@ -73,6 +73,8 @@ export default function NewComplaint() {
       rewardPoints: 25,
       isAnonymous: data.isAnonymous,
       isRecurring: false,
+      isCommunityReport: data.isCommunityReport,
+      societyName: data.societyName,
     })
     
     setStep(5)
@@ -110,10 +112,64 @@ export default function NewComplaint() {
               <AnimatePresence mode="wait">
                 {step === 0 && (
                   <motion.div key="step0" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-                    <h2 className="text-2xl font-black text-white mb-2">Select Issue Category</h2>
-                    <p className="text-slate-500 mb-8 text-sm">Choose the category that best fits the problem you're reporting.</p>
+                    <h2 className="text-2xl font-black text-white mb-2">How are you reporting?</h2>
+                    <p className="text-slate-500 mb-8 text-sm">Individual reports are for personal issues. Society reports gather area-wide attention faster.</p>
                     
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-10">
+                      <button
+                        onClick={() => setData({...data, isCommunityReport: false})}
+                        className={clsx(
+                          'flex items-center gap-6 p-6 rounded-[2rem] border transition-all duration-300 text-left group',
+                          !data.isCommunityReport 
+                            ? 'bg-primary-500/10 border-primary-500 shadow-glow-blue' 
+                            : 'bg-white/5 border-white/5 hover:border-white/10'
+                        )}
+                      >
+                        <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center text-3xl group-hover:scale-110 transition-transform">👤</div>
+                        <div>
+                          <p className={clsx('text-lg font-black', !data.isCommunityReport ? 'text-white' : 'text-slate-400')}>Individual Report</p>
+                          <p className="text-xs text-slate-500 mt-1">Standard report for single concerns.</p>
+                        </div>
+                      </button>
+
+                      <button
+                        onClick={() => setData({...data, isCommunityReport: true})}
+                        className={clsx(
+                          'flex items-center gap-6 p-6 rounded-[2rem] border transition-all duration-300 text-left group',
+                          data.isCommunityReport 
+                            ? 'bg-brand-rose/10 border-brand-rose shadow-glow-rose' 
+                            : 'bg-white/5 border-white/5 hover:border-white/10'
+                        )}
+                      >
+                        <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center text-3xl group-hover:scale-110 transition-transform">🏘️</div>
+                        <div>
+                          <p className={clsx('text-lg font-black', data.isCommunityReport ? 'text-brand-rose' : 'text-slate-400')}>Society / Area Report</p>
+                          <p className="text-xs text-slate-500 mt-1">Collective voice for high-priority fixes.</p>
+                        </div>
+                      </button>
+                    </div>
+
+                    <AnimatePresence>
+                      {data.isCommunityReport && (
+                        <motion.div 
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="space-y-4 mb-10"
+                        >
+                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Society / Area Name</label>
+                          <input 
+                            placeholder="e.g. Green Valley Apartments, Sector 15 Residents"
+                            className="w-full bg-dark-950/50 border border-brand-rose/20 rounded-xl px-4 py-3 text-sm text-white focus:border-brand-rose/50 outline-none transition-all"
+                            value={data.societyName}
+                            onChange={e => setData({...data, societyName: e.target.value})}
+                          />
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+
+                    <h2 className="text-xl font-black text-white mb-6">Select Category</h2>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                       {Object.entries(CATEGORY_META).map(([key, meta]) => (
                         <button
                           key={key}
@@ -125,8 +181,8 @@ export default function NewComplaint() {
                               : 'bg-white/5 border-white/5 hover:border-white/10'
                           )}
                         >
-                          <span className="text-4xl mb-3 group-hover:scale-110 transition-transform">{meta.icon}</span>
-                          <span className={clsx('text-xs font-bold uppercase tracking-widest', data.category === key ? 'text-primary-400' : 'text-slate-400')}>
+                          <span className="text-3xl mb-2 group-hover:scale-110 transition-transform">{meta.icon}</span>
+                          <span className={clsx('text-[10px] font-bold uppercase tracking-widest', data.category === key ? 'text-primary-400' : 'text-slate-400')}>
                             {meta.label}
                           </span>
                         </button>

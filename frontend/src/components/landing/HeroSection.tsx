@@ -67,25 +67,25 @@ export function HeroSection() {
           {!isAuthenticated ? (
             <Link to="/login">
               <Button size="xl" glow rightIcon={<ArrowRight size={20} />}>
-                Choose Your Mode & Start
+                Join the Watch & Start
               </Button>
             </Link>
           ) : isStaff ? (
             <Link to={dashboardLink}>
               <Button size="xl" glow rightIcon={<ArrowRight size={20} />}>
-                {user?.role === 'officer' ? 'Enter Duty Desk' : 'Enter Command Center'}
+                {user?.role === 'officer' ? 'Open Duty Terminal' : 'Launch City HQ'}
               </Button>
             </Link>
           ) : (
             <>
               <Link to="/complaints/new">
                 <Button size="xl" glow rightIcon={<ArrowRight size={20} />}>
-                  Report an Issue Now
+                  Fix My Neighborhood
                 </Button>
               </Link>
               <Link to="/dashboard/citizen">
                 <Button variant="secondary" size="xl">
-                  My Dashboard
+                  Citizen Portal
                 </Button>
               </Link>
             </>

@@ -82,6 +82,8 @@ export interface Complaint {
   assignedDepartment?: string;
   isAnonymous: boolean;
   isRecurring: boolean;
+  isCommunityReport: boolean;
+  societyName?: string;
   upvotes: number;
   tags: string[];
   estimatedResolutionDays: number;

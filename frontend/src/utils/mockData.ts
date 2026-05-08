@@ -120,6 +120,8 @@ export const COMPLAINTS: Complaint[] = Array.from({ length: 50 }).map((_, i) => 
     rewardPoints: 25,
     isAnonymous: Math.random() > 0.8,
     isRecurring: Math.random() > 0.9,
+    isCommunityReport: i % 7 === 0,
+    societyName: i % 7 === 0 ? `${ward.name} Residents Association` : undefined,
   };
 });
 

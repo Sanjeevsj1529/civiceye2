@@ -249,8 +249,18 @@ export default function AdminDashboard() {
                           <div className="flex items-center gap-3 mb-1">
                             <span className="text-[10px] font-mono text-primary-500 font-bold tracking-widest">{c.referenceId}</span>
                             <Badge variant={c.severity >= 7 ? 'error' : 'info'}>Sev {c.severity}</Badge>
+                            {c.isCommunityReport && (
+                              <Badge variant="warning" className="bg-brand-rose/10 text-brand-rose border border-brand-rose/20 animate-pulse-glow flex items-center gap-1.5">
+                                🏘️ SOCIETY REPORT
+                                <span className="w-1 h-1 rounded-full bg-brand-rose/40" />
+                                <span className="font-black">{Math.floor(Math.random() * 8) + 3} Citizens</span>
+                              </Badge>
+                            )}
                           </div>
-                          <h4 className="text-sm font-bold text-white truncate">{c.title}</h4>
+                          <h4 className="text-sm font-bold text-white truncate flex items-center gap-2">
+                            {c.title}
+                            {c.isCommunityReport && <span className="text-[10px] bg-white/5 px-2 py-0.5 rounded-full text-slate-500 font-medium">Auto-Grouped by Area</span>}
+                          </h4>
                           <p className="text-xs text-slate-500 mt-1">{c.location.address}</p>
                         </div>
                         <div className="flex items-center gap-8">

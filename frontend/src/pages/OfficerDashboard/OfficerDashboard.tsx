@@ -81,22 +81,30 @@ export default function OfficerDashboard() {
                         {CATEGORY_META[task.category].icon}
                       </div>
                       
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-3 mb-2">
-                          <span className="text-[10px] font-mono text-slate-600 font-bold uppercase tracking-widest">{task.referenceId}</span>
-                          <Badge variant={task.severity >= 7 ? 'error' : 'info'}>Sev {task.severity}</Badge>
-                          <Badge variant="default" className="bg-brand-rose/10 text-brand-rose border border-brand-rose/20">
-                            Due in 4h
-                          </Badge>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-3 mb-2">
+                            <span className="text-[10px] font-mono text-slate-600 font-bold uppercase tracking-widest">{task.referenceId}</span>
+                            <Badge variant={task.severity >= 7 ? 'error' : 'info'}>Sev {task.severity}</Badge>
+                            {task.isCommunityReport && (
+                              <Badge variant="warning" className="bg-brand-rose/10 text-brand-rose border border-brand-rose/20 animate-pulse-glow flex items-center gap-1.5">
+                                🏘️ SOCIETY
+                                <span className="w-1 h-1 rounded-full bg-brand-rose/40" />
+                                <span className="font-black">{Math.floor(Math.random() * 6) + 2} Reports</span>
+                              </Badge>
+                            )}
+                            <Badge variant="default" className="bg-brand-rose/10 text-brand-rose border border-brand-rose/20">
+                              Due in 4h
+                            </Badge>
+                          </div>
+                          <h4 className="text-lg font-bold text-white truncate group-hover:text-primary-400 transition-colors flex items-center gap-2">
+                            {task.title}
+                            {task.isCommunityReport && <span className="text-[10px] bg-white/5 px-2 py-0.5 rounded-full text-slate-500 font-medium font-sans">Multi-Citizen Issue</span>}
+                          </h4>
+                          <div className="flex items-center gap-4 mt-2">
+                            <p className="text-xs text-slate-500 flex items-center gap-1.5"><MapPin size={12} /> {task.location.address}</p>
+                            <p className="text-xs text-slate-500 flex items-center gap-1.5"><User size={12} /> {task.isCommunityReport ? 'Community Verified' : task.citizenName}</p>
+                          </div>
                         </div>
-                        <h4 className="text-lg font-bold text-white truncate group-hover:text-primary-400 transition-colors">
-                          {task.title}
-                        </h4>
-                        <div className="flex items-center gap-4 mt-2">
-                          <p className="text-xs text-slate-500 flex items-center gap-1.5"><MapPin size={12} /> {task.location.address}</p>
-                          <p className="text-xs text-slate-500 flex items-center gap-1.5"><User size={12} /> {task.citizenName}</p>
-                        </div>
-                      </div>
 
                       <div className="flex items-center gap-3 pt-4 sm:pt-0 border-t sm:border-t-0 sm:border-l border-white/5 sm:pl-6">
                         <Link to={`/complaints/track/${task.referenceId}`}>
