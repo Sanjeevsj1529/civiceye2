@@ -78,14 +78,17 @@ export function Navbar() {
     <motion.nav 
       initial={{ y: -100 }}
       animate={{ y: 0 }}
+      transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
       className={clsx(
         'fixed top-0 left-0 right-0 z-50 py-4 px-6 transition-all duration-500',
         scrolled 
           ? clsx(
-              'border-b backdrop-blur-md transition-colors duration-500',
-              darkMode ? 'bg-brand-navy/90 border-white/10 shadow-premium' : 'bg-white/90 border-slate-200 shadow-soft'
+              'border-b backdrop-blur-xl transition-all duration-500',
+              darkMode 
+                ? 'border-white/[0.08] bg-[#030712]/85 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.65),0_0_0_1px_rgba(129,140,248,0.12)]' 
+                : 'border-slate-200/90 bg-white/85 shadow-[0_12px_40px_-16px_rgba(15,23,42,0.12)]'
             )
-          : 'bg-transparent'
+          : 'border-b border-transparent bg-transparent'
       )}
     >
       <div className="max-w-[1400px] mx-auto flex items-center justify-between gap-8">

@@ -1,6 +1,8 @@
-import React from 'react'
+import React, { useLayoutEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { clsx } from 'clsx'
+import gsap from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { HeroSection } from '../../components/landing/HeroSection'
 import { LiveTicker } from '../../components/landing/LiveTicker'
 import { CategoryPills } from '../../components/landing/CategoryPills'
@@ -10,9 +12,47 @@ import { TestimonialCarousel } from '../../components/landing/TestimonialCarouse
 import { WARDS } from '../../utils/mockData'
 import { Button } from '../../components/ui'
 import { Link } from 'react-router-dom'
-import { Trophy, ArrowRight } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
+
+gsap.registerPlugin(ScrollTrigger)
 
 export default function LandingPage() {
+  const wardsSectionRef = useRef<HTMLElement>(null)
+
+  useLayoutEffect(() => {
+    const root = wardsSectionRef.current
+    if (!root) return
+
+    const ctx = gsap.context(() => {
+      gsap.from(root.querySelectorAll('.landing-ward-card'), {
+        scrollTrigger: {
+          trigger: root,
+          start: 'top 82%',
+          toggleActions: 'play none none none',
+        },
+        y: 48,
+        opacity: 0,
+        duration: 0.95,
+        stagger: 0.1,
+        ease: 'power3.out',
+      })
+
+      gsap.from(root.querySelector('.landing-wards-intro'), {
+        scrollTrigger: {
+          trigger: root,
+          start: 'top 85%',
+          toggleActions: 'play none none none',
+        },
+        x: -36,
+        opacity: 0,
+        duration: 1,
+        ease: 'power3.out',
+      })
+    }, root)
+
+    return () => ctx.revert()
+  }, [])
+
   return (
     <div className="min-h-screen overflow-hidden">
       <HeroSection />
@@ -21,15 +61,14 @@ export default function LandingPage() {
       <LandingStats />
       
       {/* Featured Section: Top Wards - Broken Symmetry Layout */}
-      <section className="py-32 px-6 relative overflow-hidden bg-brand-navy/5 dark:bg-white/5">
-        <div className="absolute inset-0 bg-dots [background-size:30px_30px] opacity-40 dark:opacity-10" />
+      <section
+        ref={wardsSectionRef}
+        className="py-32 px-6 relative overflow-hidden bg-brand-navy/5 dark:bg-white/[0.03]"
+      >
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-brand-indigo/[0.07] via-transparent to-neon-cyan/[0.05]" />
+        <div className="absolute inset-0 bg-dots [background-size:30px_30px] opacity-40 dark:opacity-10 animate-grid-pan" />
         <div className="max-w-7xl mx-auto grid lg:grid-cols-12 gap-16 items-start relative z-10">
-          <motion.div
-            initial={{ opacity: 0, x: -30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            className="lg:col-span-5 sticky top-32"
-          >
+          <div className="landing-wards-intro lg:col-span-5 sticky top-32">
             <div className="flex items-center gap-4 mb-8">
               <div className="w-14 h-14 rounded-handcrafted bg-brand-amber/10 flex items-center justify-center text-3xl text-brand-amber shadow-handcrafted">🏆</div>
               <h3 className="text-sm font-black text-brand-amber uppercase tracking-[0.2em]">Performance Index</h3>
@@ -47,18 +86,14 @@ export default function LandingPage() {
                 Explore City Metrics
               </Button>
             </Link>
-          </motion.div>
+          </div>
 
           <div className="lg:col-span-7 space-y-6 pt-12 lg:pt-0">
             {WARDS.slice(0, 4).sort((a, b) => b.slaComplianceRate - a.slaComplianceRate).map((ward, i) => (
-              <motion.div
+              <div
                 key={ward.id}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
                 className={clsx(
-                  "glass p-8 rounded-2xl border-2 border-slate-200 dark:border-white/5 flex items-center justify-between group hover:shadow-handcrafted transition-all duration-500",
+                  "landing-ward-card glass-premium p-8 rounded-2xl border border-white/12 dark:border-white/[0.06] flex items-center justify-between group hover:shadow-glow-blue hover:border-brand-indigo/25 transition-all duration-500",
                   i % 2 === 0 ? "lg:mr-12" : "lg:ml-12"
                 )}
               >
@@ -76,7 +111,7 @@ export default function LandingPage() {
                   <p className="text-4xl font-black text-brand-navy dark:text-white font-display leading-none">{ward.slaComplianceRate}%</p>
                   <p className="text-[10px] text-emerald-500 uppercase tracking-widest font-black mt-1">SLA Compliance</p>
                 </div>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
@@ -89,7 +124,7 @@ export default function LandingPage() {
       <section className="py-40 px-6 relative overflow-hidden">
         <div className="absolute inset-0 bg-brand-navy" />
         <div className="absolute inset-0 opacity-[0.12] dark:opacity-[0.05] bg-noise" />
-        <div className="max-w-5xl mx-auto relative z-10 text-center glass bg-white/10 dark:bg-white/5 p-20 rounded-handcrafted-lg border border-white/10 shadow-2xl backdrop-blur-xl rotate-[-1deg]">
+        <div className="max-w-5xl mx-auto relative z-10 text-center glass-premium bg-white/10 dark:bg-white/[0.06] p-20 rounded-handcrafted-lg border border-white/15 shadow-glow-lg backdrop-blur-2xl rotate-[-1deg]">
           <h2 className="text-5xl md:text-8xl font-black text-white mb-10 tracking-tighter leading-none">Voice your concern, <br /><span className="text-brand-indigo">Change your city.</span></h2>
           <p className="text-xl text-indigo-200/60 mb-14 max-w-2xl mx-auto font-medium">
             Join thousands of citizens working directly with authorities to build a more responsive and liveable urban future.

@@ -17,6 +17,7 @@ import {
   Clock, Award, Trash2, Edit3, Send
 } from 'lucide-react'
 import { CameraModal } from '../../components/common/CameraModal'
+import { FloatingOrbs } from '../../components/cinematic'
 import { clsx } from 'clsx'
 
 // Fix for default marker icons
@@ -260,8 +261,10 @@ export default function NewComplaint() {
   }
 
   return (
-    <div className="min-h-screen pb-20 pt-24 px-6">
-      <div className="max-w-[1600px] mx-auto">
+    <div className="relative min-h-screen overflow-hidden pb-20 pt-24 px-6">
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-brand-indigo/[0.07] via-transparent to-transparent dark:from-brand-indigo/12" />
+      <FloatingOrbs className="opacity-80" />
+      <div className="relative z-[1] max-w-[1600px] mx-auto">
         {/* Progress Tracker */}
         {step < 5 && (
           <div className="mb-10 px-4">
@@ -286,7 +289,7 @@ export default function NewComplaint() {
 
         <div className="grid lg:grid-cols-12 gap-8">
           <div className="lg:col-span-8">
-            <Card className="p-8 border-white/10 bg-slate-50 dark:bg-white/5 min-h-[500px] flex flex-col">
+            <Card className="glass-premium p-8 border-white/12 bg-slate-50/90 dark:bg-white/[0.06] min-h-[500px] flex flex-col shadow-glow-lg">
               <AnimatePresence mode="wait">
                 {step === 0 && (
                   <motion.div key="step0" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
@@ -375,7 +378,7 @@ export default function NewComplaint() {
                     <p className="text-slate-500 mb-8 text-sm">Where exactly is this happening? You can use your current location.</p>
                     
                     <div className="space-y-6">
-                      <div className="h-80 rounded-3xl bg-slate-50 dark:bg-dark-900 border border-slate-200 dark:border-white/5 relative overflow-hidden">
+                      <div className="h-80 rounded-3xl bg-slate-50 dark:bg-dark-900 border border-slate-200 dark:border-white/10 relative overflow-hidden shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)] ring-1 ring-white/5">
                         <MapContainer 
                           center={[data.location.lat, data.location.lng]} 
                           zoom={13} 
@@ -473,7 +476,7 @@ export default function NewComplaint() {
                       <button 
                         onClick={() => setShowCamera(true)}
                         disabled={saving || (data.media.length + pendingMedia.length) >= 3}
-                        className="flex flex-col items-center justify-center p-8 rounded-3xl border border-dashed border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="group flex flex-col items-center justify-center p-8 rounded-3xl border border-dashed border-slate-300/80 dark:border-neon-cyan/25 bg-slate-50/90 dark:bg-white/[0.04] hover:border-brand-indigo/40 hover:bg-white/80 dark:hover:bg-white/[0.08] hover:shadow-glow-blue transition-all duration-300 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <Camera size={32} className="text-primary-500 mb-3" />
                         <span className="text-xs font-bold text-slate-900 dark:text-white">Capture Photo</span>
@@ -490,7 +493,7 @@ export default function NewComplaint() {
                       <label 
                         onClick={() => document.getElementById('upload-gallery')?.click()}
                         className={clsx(
-                          "flex flex-col items-center justify-center p-8 rounded-3xl border border-dashed border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 transition-all cursor-pointer",
+                          "group flex flex-col items-center justify-center p-8 rounded-3xl border border-dashed border-slate-300/80 dark:border-brand-violet/30 bg-slate-50/90 dark:bg-white/[0.04] hover:border-brand-violet/50 hover:bg-white/80 dark:hover:bg-white/[0.08] hover:shadow-glow-violet transition-all duration-300 cursor-pointer",
                           (saving || (data.media.length + pendingMedia.length) >= 3) && "opacity-50 cursor-not-allowed"
                         )}
                       >

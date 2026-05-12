@@ -14,6 +14,7 @@ import {
   Calendar, Shield, MoreHorizontal, Send, Phone
 } from 'lucide-react'
 import { clsx } from 'clsx'
+import { FloatingOrbs } from '../../components/cinematic'
 import { format, formatDistanceToNow } from 'date-fns'
 
 // Fix for default marker icons
@@ -77,10 +78,11 @@ export default function ComplaintTracking() {
 
   return (
     <div className="min-h-screen pb-20 pt-32 px-6 relative overflow-hidden">
-      {/* Background Texture */}
-      <div className="absolute inset-0 z-0 opacity-[0.35] dark:opacity-[0.08] pointer-events-none">
+      <div className="pointer-events-none absolute inset-0 z-0 bg-gradient-to-b from-brand-indigo/[0.06] via-transparent to-transparent dark:from-brand-indigo/12" />
+      <FloatingOrbs className="z-0 opacity-75" />
+      <div className="absolute inset-0 z-0 opacity-[0.35] dark:opacity-[0.1] pointer-events-none">
         <div className="absolute inset-0 bg-noise" />
-        <div className="absolute top-0 left-0 w-full h-full bg-dots [background-size:40px_40px]" />
+        <div className="absolute top-0 left-0 w-full h-full bg-dots [background-size:40px_40px] animate-grid-pan" />
       </div>
 
       <div className="max-w-[1400px] mx-auto relative z-10">
@@ -199,20 +201,20 @@ export default function ComplaintTracking() {
                     <div key={event.id} className="relative pl-16 pb-4">
                       {/* Line */}
                       {i < (complaint.timeline?.length || 0) - 1 && (
-                        <div className="absolute left-[31px] top-12 bottom-0 w-1 bg-slate-100 dark:bg-white/5" />
+                        <div className="absolute left-[31px] top-12 bottom-0 w-[3px] rounded-full bg-gradient-to-b from-brand-indigo/60 via-neon-cyan/35 to-slate-100/80 dark:from-brand-indigo dark:via-neon-cyan/40 dark:to-white/10 shadow-[0_0_12px_rgba(79,70,229,0.35)]" />
                       )}
                       
                       {/* Icon Node */}
                       <div className={clsx(
-                        'absolute left-0 top-0 w-16 h-16 rounded-xl flex items-center justify-center text-2xl shadow-soft border-2',
+                        'absolute left-0 top-0 w-16 h-16 rounded-xl flex items-center justify-center text-2xl border-2 transition-all duration-300',
                         i === 0 
-                          ? 'bg-brand-navy text-white border-brand-navy dark:bg-brand-indigo shadow-handcrafted animate-pulse-glow' 
-                          : 'bg-white dark:bg-dark-950 text-slate-400 border-slate-200 dark:border-white/5'
+                          ? 'bg-brand-navy text-white border-brand-indigo/80 dark:bg-gradient-to-br dark:from-brand-indigo dark:to-violet-700 shadow-glow-blue ring-2 ring-brand-indigo/30 animate-pulse-glow' 
+                          : 'bg-white dark:bg-dark-950 text-slate-400 border-slate-200 dark:border-white/10 shadow-soft hover:border-brand-indigo/40'
                       )}>
                         {event.status === 'submitted' ? '📥' : event.status === 'assigned' ? '👤' : event.status === 'resolved' ? '✅' : '⚙️'}
                       </div>
 
-                      <div className="bg-white dark:bg-white/5 border-2 border-slate-200 dark:border-white/5 rounded-2xl p-8 hover:border-brand-indigo transition-all group relative overflow-hidden">
+                      <div className="glass-premium border border-white/12 bg-white/95 dark:bg-white/[0.06] rounded-2xl p-8 hover:border-brand-indigo/45 hover:shadow-glow-blue transition-all duration-500 group relative overflow-hidden">
                         <div className="flex items-center justify-between mb-4">
                           <h4 className="text-xs font-black text-brand-navy dark:text-white uppercase tracking-[0.2em]">{event.status.replace('_', ' ')}</h4>
                           <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{event.timestamp ? format(new Date(event.timestamp), 'MMM d · h:mm a') : 'Now'}</span>

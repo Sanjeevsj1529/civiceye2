@@ -9,10 +9,25 @@
     --primary: 79, 70, 229;
     --navy: 15, 23, 42;
     --amber: 245, 158, 11;
+    --ce-glow: rgba(129, 140, 248, 0.35);
+    --ce-cyan: rgba(34, 211, 238, 0.25);
+  }
+
+  html {
+    scroll-behavior: auto;
+  }
+
+  html.lenis,
+  html.lenis body {
+    height: auto;
+  }
+
+  .lenis.lenis-smooth {
+    scroll-behavior: auto !important;
   }
 
   body {
-    @apply bg-brand-cream dark:bg-brand-navy text-slate-900 dark:text-slate-200 antialiased selection:bg-brand-indigo/30 selection:text-white;
+    @apply bg-brand-cream dark:bg-[#030712] text-slate-900 dark:text-slate-200 antialiased selection:bg-brand-indigo/40 selection:text-white;
     background-image: url('https://www.transparenttextures.com/patterns/natural-paper.png');
   }
   
@@ -34,8 +49,29 @@
     @apply border-brand-indigo/30 shadow-soft;
   }
 
+  .glass-premium {
+    @apply relative overflow-hidden rounded-[1.75rem] border border-white/10 bg-white/70 text-slate-900 shadow-glow-lg backdrop-blur-2xl transition-all duration-500 dark:border-white/[0.07] dark:bg-[rgba(15,23,42,0.55)] dark:text-white dark:shadow-inner-glow;
+  }
+
+  .glass-premium::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(135deg, rgba(255,255,255,0.12) 0%, transparent 42%, rgba(129,140,248,0.08) 100%);
+    pointer-events: none;
+  }
+
+  .ce-page-ambient {
+    @apply pointer-events-none fixed inset-0 -z-10 overflow-hidden;
+  }
+
   .gradient-text {
     @apply bg-clip-text text-transparent bg-gradient-to-r from-brand-navy via-brand-indigo to-brand-slate dark:from-white dark:to-slate-400;
+  }
+
+  .gradient-text-cinematic {
+    @apply bg-clip-text text-transparent bg-gradient-to-br from-white via-neon-cyan/90 to-brand-indigo;
   }
 
   .input-field {

@@ -17,6 +17,7 @@ import { clsx } from 'clsx'
 import { useAuthStore } from '../../store/authStore'
 import { useComplaintStore } from '../../store/complaintStore'
 import { Link } from 'react-router-dom'
+import { FloatingOrbs } from '../../components/cinematic'
 import { format } from 'date-fns'
 
 // Fix for default marker icons
@@ -81,8 +82,10 @@ export default function OfficerDashboard() {
   }
 
   return (
-    <div className="min-h-screen pb-20 pt-24 px-6">
-      <div className="max-w-[1800px] mx-auto">
+    <div className="relative min-h-screen overflow-hidden pb-20 pt-24 px-6">
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-emerald-500/[0.06] via-transparent to-transparent dark:from-emerald-500/10" />
+      <FloatingOrbs className="opacity-70" />
+      <div className="relative z-[1] max-w-[1800px] mx-auto">
         {/* Header */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-10">
           <div className="flex items-center gap-6">
@@ -124,9 +127,9 @@ export default function OfficerDashboard() {
         {/* Stats Section */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
           <StatCard label="Assigned Tasks" value={myTasks.length.toString()} icon="📋" trend={2} />
-          <StatCard label="Resolved" value={resolvedCount.toString()} icon="✅" trend={15} color="from-emerald-500/10 to-green-500/10" />
-          <StatCard label="SLA Compliance" value="96%" icon="⏱️" trend={4} color="from-blue-500/10 to-cyan-500/10" />
-          <StatCard label="Performance Score" value="4.8" icon="⭐" trend={1} color="from-amber-500/10 to-yellow-500/10" />
+          <StatCard label="Resolved" value={resolvedCount.toString()} icon="✅" trend={15} color="from-emerald-500/15 to-green-500/10 ring-1 ring-emerald-500/15 shadow-glow-emerald" />
+          <StatCard label="SLA Compliance" value="96%" icon="⏱️" trend={4} color="from-blue-500/15 to-cyan-500/10 ring-1 ring-neon-cyan/20 shadow-glow-blue" />
+          <StatCard label="Performance Score" value="4.8" icon="⭐" trend={1} color="from-amber-500/15 to-yellow-500/10 ring-1 ring-amber-400/20" />
         </div>
 
         <div className="grid lg:grid-cols-3 gap-8">
