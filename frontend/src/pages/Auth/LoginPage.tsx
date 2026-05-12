@@ -9,46 +9,67 @@ import { clsx } from 'clsx'
 
 const ROLES: { id: UserRole; label: string; icon: string; desc: string }[] = [
   { id: 'citizen', label: 'Citizen', icon: '👤', desc: 'File & track public issues' },
-  { id: 'officer', label: 'Field Officer', icon: '👮', desc: 'Manage assigned tasks' },
-  { id: 'zonal_admin', label: 'Zonal Admin', icon: '🏛️', desc: 'Oversee ward operations' },
-  { id: 'super_admin', label: 'Super Admin', icon: '⚙️', desc: 'Full system control' },
+  { id: 'officer', label: 'Field Worker', icon: '👷', desc: 'Resolve & Update Tasks' },
+  { id: 'zonal_admin', label: 'Zonal Admin', icon: '🛡️', desc: 'Manage Assigned Ward' },
+  { id: 'super_admin', label: 'Super Admin', icon: '🏛️', desc: 'Global City Oversight' },
 ]
 
 export default function LoginPage() {
-  const [step, setStep] = useState<'role' | 'credentials' | 'otp'>('role')
+  const [step, setStep] = useState<'role' | 'credentials' | 'location' | 'forgot_password'>('role')
   const [role, setRole] = useState<UserRole>('citizen')
-  const [emailOrPhone, setEmailOrPhone] = useState('')
-  const [otp, setOtp] = useState(['', '', '', '', '', ''])
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [error, setError] = useState('')
-  const { login, sendOTP, verifyOTP, isLoading } = useAuthStore()
+  const [resetMessage, setResetMessage] = useState('')
+  const [wardId, setWardId] = useState('')
+  const [wardName, setWardName] = useState('')
+  const { login, resetPassword, updateUISettings, updateRole, isLoading, user } = useAuthStore()
+  const [emailFocused, setEmailFocused] = useState(false)
   const navigate = useNavigate()
 
-  const handleSendOTP = async () => {
-    if (!emailOrPhone) return setError('Please enter your email or phone')
+  const handleLogin = async () => {
+    if (!email || !password) return setError('Please enter both email and password')
     setError('')
-    await sendOTP(emailOrPhone)
-    setStep('otp')
-  }
-
-  const handleVerifyOTP = async () => {
-    const code = otp.join('')
-    if (code.length < 6) return setError('Enter the full 6-digit code')
-    setError('')
-    const ok = await verifyOTP(code)
-    if (ok) {
-      await login(emailOrPhone, role)
-      navigate('/')
-    } else {
-      setError('Invalid OTP. Please use 123456 for demo.')
+    try {
+      await login(email, password)
+      
+      // For demo accounts, we skip the Firestore role update to avoid errors
+      if (!['citizen@civiceye.com', 'officer@civiceye.com', 'zonal@civiceye.com', 'admin@civiceye.com'].includes(email)) {
+        await updateRole(role);
+      }
+      
+      if (role === 'super_admin' || role === 'zonal_admin' || role === 'admin') {
+        navigate('/dashboard/admin')
+      } else if (role === 'officer') {
+        navigate('/dashboard/officer')
+      } else {
+        navigate('/dashboard/citizen')
+      }
+    } catch (err: any) {
+      setError(err.message || 'Failed to login')
     }
   }
 
-  const handleOtpChange = (val: string, index: number) => {
-    if (val.length > 1) return
-    const newOtp = [...otp]
-    newOtp[index] = val
-    setOtp(newOtp)
-    if (val && index < 5) document.getElementById(`otp-${index + 1}`)?.focus()
+  const handleFinishLogin = async () => {
+    if (!wardId) return setError('Please select a ward')
+    try {
+      await updateUISettings({ wardId, wardName })
+      navigate('/')
+    } catch (err: any) {
+      setError('Failed to update ward assignment')
+    }
+  }
+
+  const handleResetPassword = async () => {
+    if (!email) return setError('Please enter your email to reset password')
+    setError('')
+    setResetMessage('')
+    try {
+      await resetPassword(email)
+      setResetMessage('Password reset link sent to your email!')
+    } catch (err: any) {
+      setError(err.message || 'Failed to send reset link')
+    }
   }
 
   return (
@@ -70,7 +91,7 @@ export default function LoginPage() {
           <p className="text-slate-500 mt-2">Log in to track your reports and earn points</p>
         </div>
 
-        <Card className="p-8 shadow-2xl border-slate-200 dark:border-white/10">
+        <Card className="p-8 shadow-2xl border-slate-200 dark:border-slate-200 dark:border-white/10">
           <AnimatePresence mode="wait">
             {step === 'role' && (
               <motion.div 
@@ -79,7 +100,7 @@ export default function LoginPage() {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
               >
-                <h2 className="text-lg font-bold text-white mb-6">Select Your Role</h2>
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-6">Select Your Role</h2>
                 <div className="grid grid-cols-2 gap-4 mb-8">
                   {ROLES.map((r) => (
                     <button
@@ -89,7 +110,7 @@ export default function LoginPage() {
                         'flex flex-col items-center justify-center p-4 rounded-2xl border transition-all duration-300 text-left',
                         role === r.id 
                           ? 'bg-primary-500/10 border-primary-500 shadow-glow-blue' 
-                          : 'bg-white/5 border-white/5 hover:border-white/20'
+                          : 'bg-slate-50 dark:bg-white/5 border-white/5 hover:border-white/20'
                       )}
                     >
                       <span className="text-3xl mb-3">{r.icon}</span>
@@ -113,109 +134,187 @@ export default function LoginPage() {
               >
                 <button 
                   onClick={() => setStep('role')}
-                  className="flex items-center gap-2 text-xs text-slate-500 hover:text-white mb-6 transition-colors"
+                  className="flex items-center gap-2 text-xs text-slate-500 hover:text-slate-900 dark:text-white mb-6 transition-colors"
                 >
                   <ChevronLeft size={14} /> Back to role selection
                 </button>
-                <h2 className="text-lg font-bold text-white mb-6">Login with {role.replace('_', ' ')} ID</h2>
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-6">Login with {role.replace('_', ' ')} ID</h2>
                 
-                <div className="space-y-4 mb-8">
+                <div className="space-y-4 mb-6">
                   <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Email or Phone</label>
-                    <div className="flex items-center gap-3 w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 focus-within:border-primary-500/50 transition-all">
+                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Email</label>
+                    <div className="flex items-center gap-3 w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 focus-within:border-primary-500/50 transition-all">
                       <Mail size={18} className="text-slate-500" />
                       <input 
+                        type="email"
                         placeholder="yourname@domain.com"
-                        value={emailOrPhone}
-                        onChange={e => setEmailOrPhone(e.target.value)}
-                        className="bg-transparent border-none outline-none text-sm text-white w-full placeholder:text-slate-700"
+                        value={email}
+                        onFocus={() => setEmailFocused(true)}
+                        onBlur={() => setTimeout(() => setEmailFocused(false), 200)}
+                        onChange={e => setEmail(e.target.value)}
+                        className="bg-transparent border-none outline-none text-sm text-slate-900 dark:text-white w-full placeholder:text-slate-700"
+                      />
+                    </div>
+                    
+                    <AnimatePresence>
+                      {emailFocused && (
+                        <motion.button
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          type="button"
+                          onClick={() => {
+                            if (role === 'super_admin') {
+                              setEmail('admin@civiceye.com')
+                              setPassword('admin123')
+                            } else if (role === 'zonal_admin') {
+                              setEmail('zonal@civiceye.com')
+                              setPassword('zonal123')
+                            } else if (role === 'officer') {
+                              setEmail('officer@civiceye.com')
+                              setPassword('officer123')
+                            } else {
+                              setEmail('citizen@civiceye.com')
+                              setPassword('citizen123')
+                            }
+                          }}
+                          className="w-full flex items-center justify-between px-4 py-2 mt-2 rounded-xl bg-primary-500/10 border border-primary-500/20 text-[10px] font-bold text-primary-500 uppercase tracking-widest hover:bg-primary-500/20 transition-all shadow-lg"
+                        >
+                          <span>⚡ Autofill {role.replace('_', ' ')} Demo</span>
+                          <span className="opacity-60 text-[8px]">Tap to fill</span>
+                        </motion.button>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between px-1">
+                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Password</label>
+                      <button 
+                        onClick={() => { setStep('forgot_password'); setError(''); setResetMessage(''); }}
+                        className="text-[10px] font-bold text-primary-400 hover:text-primary-300 transition-colors uppercase tracking-widest"
+                      >
+                        Forgot?
+                      </button>
+                    </div>
+                    <div className="flex items-center gap-3 w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 focus-within:border-primary-500/50 transition-all">
+                      <Lock size={18} className="text-slate-500" />
+                      <input 
+                        type="password"
+                        placeholder="••••••••"
+                        value={password}
+                        onChange={e => setPassword(e.target.value)}
+                        className="bg-transparent border-none outline-none text-sm text-slate-900 dark:text-white w-full placeholder:text-slate-700"
                       />
                     </div>
                   </div>
                 </div>
 
-                <Button className="w-full" size="lg" isLoading={isLoading} onClick={handleSendOTP}>
-                  Send Verification Code
+
+                {error && <p className="text-xs text-brand-rose mb-4 text-center">{error}</p>}
+
+                <Button className="w-full" size="lg" isLoading={isLoading} onClick={handleLogin}>
+                  Login
                 </Button>
 
                 <div className="mt-8 flex items-center gap-4 text-slate-700">
-                  <div className="h-px flex-1 bg-white/5" />
+                  <div className="h-px flex-1 bg-slate-50 dark:bg-white/5" />
                   <span className="text-[10px] font-bold uppercase tracking-widest">Or Continue With</span>
-                  <div className="h-px flex-1 bg-white/5" />
+                  <div className="h-px flex-1 bg-slate-50 dark:bg-white/5" />
                 </div>
 
                 <div className="mt-6 grid grid-cols-2 gap-4">
-                  <button className="flex items-center justify-center gap-3 px-4 py-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-sm text-white transition-all">
+                  <button className="flex items-center justify-center gap-3 px-4 py-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:bg-white/10 text-sm text-slate-900 dark:text-white transition-all">
                     <ShieldCheck size={18} className="text-primary-500" /> Gov ID
                   </button>
-                  <button className="flex items-center justify-center gap-3 px-4 py-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-sm text-white transition-all">
+                  <button className="flex items-center justify-center gap-3 px-4 py-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:bg-white/10 text-sm text-slate-900 dark:text-white transition-all">
                     <Smartphone size={18} className="text-violet-500" /> DigiLocker
                   </button>
                 </div>
               </motion.div>
             )}
 
-            {step === 'otp' && (
+            {step === 'location' && (
               <motion.div 
-                key="step-otp"
+                key="step-location"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+              >
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Ward Assignment</h2>
+                <p className="text-sm text-slate-500 mb-8">Select the ward you are authorized to manage for this session.</p>
+                
+                <div className="space-y-4 mb-8">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Active Ward</label>
+                    <div className="flex items-center gap-3 w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 focus-within:border-primary-500/50 transition-all">
+                      <Smartphone size={18} className="text-slate-500" />
+                      <select 
+                        className="bg-transparent border-none outline-none text-sm text-slate-900 dark:text-white w-full appearance-none"
+                        value={wardId}
+                        onChange={e => {
+                          const names = ['North Ward', 'South Ward', 'East Ward', 'West Ward', 'Central Ward'];
+                          const idx = parseInt(e.target.value.replace('w', '')) - 1;
+                          setWardId(e.target.value);
+                          setWardName(names[idx]);
+                        }}
+                      >
+                        <option value="" disabled className="bg-white dark:bg-dark-900">Select Ward</option>
+                        <option value="w1" className="bg-white dark:bg-dark-900">North Ward</option>
+                        <option value="w2" className="bg-white dark:bg-dark-900">South Ward</option>
+                        <option value="w3" className="bg-white dark:bg-dark-900">East Ward</option>
+                        <option value="w4" className="bg-white dark:bg-dark-900">West Ward</option>
+                        <option value="w5" className="bg-white dark:bg-dark-900">Central Ward</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {error && <p className="text-xs text-brand-rose mb-4 text-center">{error}</p>}
+
+                <Button className="w-full" size="lg" onClick={handleFinishLogin}>
+                  Enter Dashboard <ArrowRight size={18} className="ml-2" />
+                </Button>
+              </motion.div>
+            )}
+
+            {step === 'forgot_password' && (
+              <motion.div 
+                key="step-forgot"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
               >
                 <button 
                   onClick={() => setStep('credentials')}
-                  className="flex items-center gap-2 text-xs text-slate-500 hover:text-white mb-6 transition-colors"
+                  className="flex items-center gap-2 text-xs text-slate-500 hover:text-slate-900 dark:text-white mb-6 transition-colors"
                 >
-                  <ChevronLeft size={14} /> Change email/phone
+                  <ChevronLeft size={14} /> Back to login
                 </button>
-                <h2 className="text-lg font-bold text-white mb-2">Verify Account</h2>
-                <p className="text-sm text-slate-500 mb-8">We've sent a 6-digit code to <span className="text-white">{emailOrPhone}</span></p>
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Reset Password</h2>
+                <p className="text-sm text-slate-500 mb-6">Enter your email address and we'll send you a secure link to reset your password.</p>
                 
-                <div className="flex justify-between gap-2 mb-8">
-                  {otp.map((digit, i) => (
-                    <input 
-                      key={i}
-                      id={`otp-${i}`}
-                      type="text"
-                      inputMode="numeric"
-                      autoComplete="one-time-code"
-                      value={digit}
-                      onChange={e => {
-                        const val = e.target.value.slice(-1);
-                        if (val && !/^\d+$/.test(val)) return;
-                        
-                        const newOtp = [...otp];
-                        newOtp[i] = val;
-                        setOtp(newOtp);
-                        
-                        if (val && i < 5) {
-                          document.getElementById(`otp-${i + 1}`)?.focus();
-                        }
-                      }}
-                      onKeyDown={e => {
-                        if (e.key === 'Backspace' && !otp[i] && i > 0) {
-                          document.getElementById(`otp-${i - 1}`)?.focus();
-                        }
-                      }}
-                      className="w-12 h-14 bg-white dark:bg-white/5 border-2 border-slate-200 dark:border-white/10 rounded-xl text-center text-xl font-bold text-slate-900 dark:text-white focus:border-primary-500 outline-none transition-all"
-                    />
-                  ))}
+                <div className="space-y-4 mb-6">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Email</label>
+                    <div className="flex items-center gap-3 w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 focus-within:border-primary-500/50 transition-all">
+                      <Mail size={18} className="text-slate-500" />
+                      <input 
+                        type="email"
+                        placeholder="yourname@domain.com"
+                        value={email}
+                        onChange={e => setEmail(e.target.value)}
+                        className="bg-transparent border-none outline-none text-sm text-slate-900 dark:text-white w-full placeholder:text-slate-700"
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 {error && <p className="text-xs text-brand-rose mb-4 text-center">{error}</p>}
+                {resetMessage && <p className="text-xs text-emerald-400 mb-4 text-center">{resetMessage}</p>}
 
-                <Button className="w-full" size="lg" isLoading={isLoading} onClick={handleVerifyOTP}>
-                  Verify & Continue
+                <Button className="w-full" size="lg" isLoading={isLoading} onClick={handleResetPassword}>
+                  Send Reset Link
                 </Button>
-
-                <p className="mt-8 text-center text-xs text-slate-500">
-                  Didn't receive the code? <button className="text-primary-400 hover:underline" onClick={handleSendOTP}>Resend in 30s</button>
-                </p>
-                
-                <div className="mt-6 p-4 rounded-xl bg-primary-500/5 border border-primary-500/10 text-center">
-                  <p className="text-[10px] text-primary-400 font-bold uppercase tracking-widest">Demo Testing Mode</p>
-                  <p className="text-xs text-slate-500 mt-1">Use OTP: <span className="text-white font-mono">123456</span></p>
-                </div>
               </motion.div>
             )}
           </AnimatePresence>

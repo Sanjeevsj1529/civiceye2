@@ -1,5 +1,5 @@
 // src/types/user.ts
-export type UserRole = 'citizen' | 'officer' | 'zonal_admin' | 'super_admin';
+export type UserRole = 'citizen' | 'admin' | 'officer' | 'zonal_admin' | 'super_admin';
 
 export interface UserBadge {
   id: string;
@@ -24,7 +24,6 @@ export interface User {
   lastLoginAt: string;
   loginHistory: { timestamp: string; ip: string; device: string }[];
   isVerified: boolean;
-  aadhaarVerified: boolean;
   twoFactorEnabled: boolean;
   privacyMode: boolean; // For anonymous by default
   language: 'en' | 'hi';
@@ -41,4 +40,8 @@ export interface User {
   };
   familyAccounts: { name: string; relation: string; id: string }[];
   isAnonymousCapable: boolean;
+  rtl?: boolean;
+  wardId?: string; // For Zonal Admins & Officers
+  wardName?: string;
+  department?: string; // For Officers
 }

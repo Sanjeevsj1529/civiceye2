@@ -22,6 +22,7 @@ interface UIState {
   acceptGDPR: () => void;
   setLanguage: (rtl: boolean) => void;
   setAccessibility: (key: string, value: any) => void;
+  setAllSettings: (settings: Partial<UIState>) => void;
   setSpeedMultiplier: (speed: number) => void;
 }
 
@@ -47,7 +48,8 @@ export const useUIStore = create<UIState>()(
       addNotification: (n) => set((state) => ({ notifications: [n, ...state.notifications] })),
       acceptGDPR: () => set({ gdprAccepted: true }),
       setLanguage: (rtl) => set({ rtl }),
-      setAccessibility: (key, value) => set({ [key]: value }),
+      setAccessibility: (key, value) => set({ [key]: value } as any),
+      setAllSettings: (settings) => set((state) => ({ ...state, ...settings })),
       setSpeedMultiplier: (speed) => set({ speedMultiplier: speed }),
     }),
     { name: 'civiceye-ui' }

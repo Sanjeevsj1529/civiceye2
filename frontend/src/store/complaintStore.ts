@@ -1,78 +1,257 @@
 import { create } from 'zustand';
 import { Complaint, ComplaintStatus, ComplaintCategory } from '../types/complaint';
-import { COMPLAINTS } from '../utils/mockData';
+import { db } from '../firebase';
+import { 
+  collection, 
+  addDoc, 
+  updateDoc, 
+  doc, 
+  onSnapshot, 
+  query, 
+  orderBy,
+  serverTimestamp,
+  increment
+} from 'firebase/firestore';
 
 interface ComplaintState {
   complaints: Complaint[];
+  isLoading: boolean;
   filterStatus: string;
   filterCategory: string;
   searchQuery: string;
   viewMode: 'list' | 'kanban' | 'map' | 'calendar';
   
+  initializeComplaints: () => (() => void);
   setFilter: (key: 'filterStatus' | 'filterCategory' | 'searchQuery', value: string) => void;
   setViewMode: (mode: 'list' | 'kanban' | 'map' | 'calendar') => void;
-  addComplaint: (complaint: Complaint) => void;
-  updateComplaintStatus: (id: string, status: ComplaintStatus) => void;
-  upvoteComplaint: (id: string) => void;
-  addComment: (id: string, text: string, author: string) => void;
+  addComplaint: (complaint: Partial<Complaint>) => Promise<void>;
+  updateComplaintStatus: (id: string, status: ComplaintStatus, citizenId: string, referenceId: string, note?: string, assignedOfficerId?: string) => Promise<void>;
+  upvoteComplaint: (id: string, userId: string) => Promise<void>;
+  echoComplaint: (id: string, userId: string) => Promise<void>;
+  addComment: (id: string, text: string, authorId: string, authorName: string, authorRole: string, citizenId: string, referenceId: string) => Promise<void>;
   getFilteredComplaints: () => Complaint[];
-  simulateRealTimeUpdate: () => void;
 }
 
 export const useComplaintStore = create<ComplaintState>((set, get) => ({
-  complaints: COMPLAINTS,
+  complaints: [],
+  isLoading: true,
   filterStatus: 'all',
   filterCategory: 'all',
   searchQuery: '',
   viewMode: 'list',
 
+  initializeComplaints: () => {
+    set({ isLoading: true });
+    const q = query(collection(db, 'complaints'), orderBy('createdAt', 'desc'));
+    
+    // Subscribe to real-time updates
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const complaints = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Complaint[];
+      
+      set({ complaints, isLoading: false });
+    }, (error) => {
+      console.error("Error listening to complaints:", error);
+      set({ isLoading: false });
+    });
+
+    return unsubscribe;
+  },
+
   setFilter: (key, value) => set({ [key]: value }),
   setViewMode: (viewMode) => set({ viewMode }),
 
-  addComplaint: (complaint) => set((state) => ({ 
-    complaints: [complaint, ...state.complaints] 
-  })),
-
-  updateComplaintStatus: (id, status) => set((state) => ({
-    complaints: state.complaints.map(c => 
-      c.id === id ? { 
-        ...c, 
-        status, 
+  addComplaint: async (complaintData) => {
+    try {
+      const newComplaint = {
+        ...complaintData,
+        status: 'submitted',
+        upvotes: 0,
+        comments: [],
+        isCommunityReport: complaintData.isCommunityReport || false,
+        societyName: complaintData.societyName || '',
+        createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        timeline: [...c.timeline, {
+        timeline: [{
           id: `t_${Date.now()}`,
-          status,
+          status: 'submitted',
           timestamp: new Date().toISOString(),
           actor: 'System',
           actorRole: 'system',
-          note: `Status updated to ${status.replace('_', ' ')}`
-        }]
-      } : c
-    )
-  })),
+          note: 'Complaint successfully filed.'
+        }],
+        reposts: [],
+        echoCount: 0,
+        socialPriority: 0
+      };
+      
+      await addDoc(collection(db, 'complaints'), newComplaint);
+    } catch (error) {
+      console.error("Error adding complaint:", error);
+      throw error;
+    }
+  },
 
-  upvoteComplaint: (id) => set((state) => ({
-    complaints: state.complaints.map(c => 
-      c.id === id ? { ...c, upvotes: c.upvotes + 1 } : c
-    )
-  })),
+  updateComplaintStatus: async (id, status, citizenId, referenceId, note, assignedOfficerId) => {
+    try {
+      const complaintRef = doc(db, 'complaints', id);
+      const timestamp = new Date().toISOString();
+      
+      const newTimelineEntry = {
+        id: `t_${Date.now()}`,
+        status,
+        timestamp,
+        actor: 'Admin', // In real app, get from auth context
+        actorRole: 'admin',
+        note: note || `Status updated to ${status.replace('_', ' ')}`
+      };
 
-  addComment: (id, text, author) => set((state) => ({
-    complaints: state.complaints.map(c => 
-      c.id === id ? { 
-        ...c, 
-        comments: [...c.comments, {
-          id: `cm_${Date.now()}`,
-          authorId: 'u1',
-          authorName: author,
-          authorRole: 'citizen',
-          text,
-          timestamp: new Date().toISOString(),
-          isInternal: false
-        }]
-      } : c
-    )
-  })),
+      const complaints = get().complaints;
+      const target = complaints.find(c => c.id === id);
+      if (!target) return;
+
+      const updateData: any = {
+        status,
+        updatedAt: timestamp,
+        timeline: [...target.timeline, newTimelineEntry]
+      };
+
+      if (assignedOfficerId) {
+        updateData.assignedOfficerId = assignedOfficerId;
+        updateData.assignedOfficer = 'Inspector Ramesh Kumar'; // Mocked name for now
+      }
+
+      await updateDoc(complaintRef, updateData);
+
+      // Reward Citizen if resolved
+      if (status === 'resolved') {
+        await updateDoc(doc(db, 'users', citizenId), {
+          rewardPoints: increment(100),
+          resolvedCount: increment(1)
+        });
+      }
+
+      // Add Notification for Citizen
+      await addDoc(collection(db, 'notifications'), {
+        userId: citizenId,
+        title: 'Status Updated',
+        message: `Your complaint ${referenceId} is now ${status.replace('_', ' ')}.`,
+        type: 'status_change',
+        referenceId: referenceId,
+        isRead: false,
+        createdAt: serverTimestamp()
+      });
+
+      // Add Notification for Officer if assigned
+      if (status === 'assigned' && assignedOfficerId) {
+        await addDoc(collection(db, 'notifications'), {
+          userId: assignedOfficerId,
+          title: 'New Task Assigned',
+          message: `You have been assigned to complaint ${referenceId}.`,
+          type: 'status_change',
+          referenceId: referenceId,
+          isRead: false,
+          createdAt: serverTimestamp()
+        });
+      }
+    } catch (error) {
+      console.error("Error updating status:", error);
+      throw error;
+    }
+  },
+
+  upvoteComplaint: async (id, userId) => {
+    try {
+      const complaintRef = doc(db, 'complaints', id);
+      const complaints = get().complaints;
+      const target = complaints.find(c => c.id === id);
+      if (!target) return;
+
+      const upvotes = (target as any).upvotes || 0;
+      const upvoters = (target as any).upvoters || [];
+      
+      if (upvoters.includes(userId)) return; // Prevent double upvote
+
+      const newUpvotes = upvotes + 1;
+      const newPriority = (newUpvotes * 2) + ((target as any).echoCount || 0) * 5;
+
+      await updateDoc(complaintRef, {
+        upvotes: newUpvotes,
+        upvoters: [...upvoters, userId],
+        socialPriority: newPriority
+      });
+    } catch (error) {
+      console.error("Error upvoting:", error);
+      throw error;
+    }
+  },
+
+  echoComplaint: async (id, userId) => {
+    try {
+      const complaintRef = doc(db, 'complaints', id);
+      const complaints = get().complaints;
+      const target = complaints.find(c => c.id === id);
+      if (!target) return;
+
+      const echoCount = (target as any).echoCount || 0;
+      const echoers = (target as any).echoers || [];
+      
+      if (echoers.includes(userId)) return;
+
+      const newEchoCount = echoCount + 1;
+      const newPriority = ((target as any).upvotes || 0) * 2 + (newEchoCount * 5);
+
+      await updateDoc(complaintRef, {
+        echoCount: newEchoCount,
+        echoers: [...echoers, userId],
+        socialPriority: newPriority
+      });
+    } catch (error) {
+      console.error("Error echoing:", error);
+      throw error;
+    }
+  },
+
+  addComment: async (id, text, authorId, authorName, authorRole, citizenId, referenceId) => {
+    try {
+      const complaintRef = doc(db, 'complaints', id);
+      const complaints = get().complaints;
+      const target = complaints.find(c => c.id === id);
+      if (!target) return;
+
+      const newComment = {
+        id: `cm_${Date.now()}`,
+        authorId,
+        authorName,
+        authorRole,
+        text,
+        timestamp: new Date().toISOString(),
+        isInternal: authorRole !== 'citizen'
+      };
+
+      await updateDoc(complaintRef, {
+        comments: [...target.comments, newComment]
+      });
+
+      // Notify citizen if comment is from officer/admin
+      if (authorRole !== 'citizen') {
+        await addDoc(collection(db, 'notifications'), {
+          userId: citizenId,
+          title: 'New Response',
+          message: `${authorName} commented on your report ${referenceId}.`,
+          type: 'comment',
+          referenceId: referenceId,
+          isRead: false,
+          createdAt: serverTimestamp()
+        });
+      }
+    } catch (error) {
+      console.error("Error adding comment:", error);
+      throw error;
+    }
+  },
 
   getFilteredComplaints: () => {
     const { complaints, filterStatus, filterCategory, searchQuery } = get();
@@ -83,52 +262,5 @@ export const useComplaintStore = create<ComplaintState>((set, get) => ({
                           c.referenceId.toLowerCase().includes(searchQuery.toLowerCase());
       return statusMatch && categoryMatch && searchMatch;
     });
-  },
-
-  simulateRealTimeUpdate: () => set((state) => {
-    const randomIndex = Math.floor(Math.random() * state.complaints.length);
-    const target = state.complaints[randomIndex];
-    
-    // 70% chance of upvote, 30% chance of status update
-    if (Math.random() > 0.3) {
-      return {
-        complaints: state.complaints.map((c, i) => 
-          i === randomIndex ? { ...c, upvotes: c.upvotes + 1 } : c
-        )
-      };
-    } else {
-      const nextStatus: Record<ComplaintStatus, ComplaintStatus> = {
-        submitted: 'under_review',
-        under_review: 'assigned',
-        assigned: 'in_progress',
-        in_progress: 'resolved',
-        resolved: 'verified',
-        verified: 'closed',
-        closed: 'closed',
-        escalated: 'in_progress',
-        rejected: 'closed'
-      };
-      
-      const status = nextStatus[target.status];
-      if (status === target.status) return state; // No change
-
-      return {
-        complaints: state.complaints.map((c, i) => 
-          i === randomIndex ? { 
-            ...c, 
-            status,
-            updatedAt: new Date().toISOString(),
-            timeline: [...c.timeline, {
-              id: `t_sim_${Date.now()}`,
-              status,
-              timestamp: new Date().toISOString(),
-              actor: 'AI Dispatcher',
-              actorRole: 'system',
-              note: `Automated status update: ${status.replace('_', ' ')}`
-            }]
-          } : c
-        )
-      };
-    }
-  })
+  }
 }));

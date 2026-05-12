@@ -1,13 +1,19 @@
 import React from 'react'
 import { Outlet } from 'react-router-dom'
 import { Navbar } from './common/Navbar'
+import { Sidebar } from './common/Sidebar'
 import { CommandPalette } from './common/CommandPalette'
 import { useUIStore } from '../store/uiStore'
+import { useAuthStore } from '../store/authStore'
 import { Toaster } from 'react-hot-toast'
 import { clsx } from 'clsx'
 
 export function AppShell() {
-  const { darkMode, fontSize, dyslexicFont, rtl, highContrast } = useUIStore()
+  const { 
+    darkMode, fontSize, dyslexicFont, rtl, highContrast,
+    setAllSettings 
+  } = useUIStore()
+  const { user, isAuthenticated, updateUISettings } = useAuthStore()
 
   React.useEffect(() => {
     if (darkMode) {
@@ -18,6 +24,32 @@ export function AppShell() {
       document.documentElement.classList.remove('dark')
     }
   }, [darkMode])
+
+  // Sync UI settings FROM user profile ON LOGIN
+  React.useEffect(() => {
+    if (isAuthenticated && user) {
+      setAllSettings({
+        darkMode: user.theme === 'dark',
+        fontSize: user.fontSize || 'md',
+        highContrast: !!user.highContrast,
+        dyslexicFont: !!user.dyslexicFont,
+        rtl: !!user.rtl
+      })
+    }
+  }, [isAuthenticated, user?.id, setAllSettings])
+
+  // Persist UI settings TO Firestore ON CHANGE
+  React.useEffect(() => {
+    if (isAuthenticated && user) {
+      updateUISettings({
+        theme: darkMode ? 'dark' : 'light',
+        fontSize,
+        highContrast,
+        dyslexicFont,
+        rtl
+      })
+    }
+  }, [darkMode, fontSize, highContrast, dyslexicFont, rtl, isAuthenticated, updateUISettings])
 
   return (
     <div className={clsx(
@@ -30,6 +62,7 @@ export function AppShell() {
     )} style={{ backgroundColor: darkMode ? '#020617' : '#f8fafc' }}>
       {/* Global Components */}
       <Navbar />
+      <Sidebar />
       <CommandPalette />
       <Toaster 
         position="top-right" 

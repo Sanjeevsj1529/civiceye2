@@ -14,19 +14,26 @@ export default function RegisterPage() {
     name: '',
     email: '',
     phone: '',
+    password: '',
     address: '',
-    aadhaar: ''
+    wardId: '',
+    wardName: '',
   })
+  const [error, setError] = useState('')
   const navigate = useNavigate()
-  const { login } = useAuthStore()
+  const { register, isLoading } = useAuthStore()
 
   const handleNext = () => setStep(s => s + 1)
   const handleBack = () => setStep(s => s - 1)
 
   const handleSubmit = async () => {
-    // Mock registration
-    await login(formData.email, role)
-    navigate('/')
+    try {
+      setError('')
+      await register(formData.email, formData.password, role, formData)
+      navigate('/')
+    } catch (err: any) {
+      setError(err.message)
+    }
   }
 
   return (
@@ -65,7 +72,7 @@ export default function RegisterPage() {
               <div className="grid grid-cols-2 gap-4 mb-8">
                 {[
                   { id: 'citizen', label: 'Citizen', icon: '👤', desc: 'Report issues' },
-                  { id: 'officer', label: 'Officer', icon: '👮', desc: 'Resolve tasks' },
+                  { id: 'admin', label: 'Field Officer', icon: '👷', desc: 'Resolve & Manage' },
                 ].map((r) => (
                   <button
                     key={r.id}
@@ -127,6 +134,19 @@ export default function RegisterPage() {
                     />
                   </div>
                 </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Password</label>
+                  <div className="flex items-center gap-3 w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10">
+                    <ShieldCheck size={18} className="text-slate-500" />
+                    <input 
+                      type="password"
+                      placeholder="••••••••" 
+                      className="bg-transparent border-none outline-none text-sm text-white w-full"
+                      value={formData.password}
+                      onChange={e => setFormData({...formData, password: e.target.value})}
+                    />
+                  </div>
+                </div>
               </div>
               <div className="flex gap-4">
                 <Button variant="outline" className="flex-1" onClick={handleBack}>Back</Button>
@@ -141,19 +161,6 @@ export default function RegisterPage() {
               <p className="text-sm text-slate-500 mb-8">Verification helps us maintain a secure and trustworthy community.</p>
               
               <div className="space-y-6 mb-8">
-                <div className="p-6 rounded-2xl border border-primary-500/20 bg-primary-500/5">
-                  <div className="flex items-center gap-4 mb-4">
-                    <ShieldCheck size={24} className="text-primary-400" />
-                    <h3 className="text-white font-bold">Aadhaar Link (Recommended)</h3>
-                  </div>
-                  <input 
-                    placeholder="Enter 12-digit Aadhaar Number" 
-                    className="w-full bg-dark-950/50 border border-white/10 rounded-xl px-4 py-3 text-white text-sm mb-4 outline-none focus:border-primary-500/50"
-                    value={formData.aadhaar}
-                    onChange={e => setFormData({...formData, aadhaar: e.target.value})}
-                  />
-                  <p className="text-[10px] text-slate-600">Your data is encrypted and handled according to government security standards.</p>
-                </div>
 
                 <div className="flex items-start gap-3 px-2">
                   <input type="checkbox" id="terms" className="mt-1 accent-primary-500" />

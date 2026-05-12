@@ -12,110 +12,96 @@ export function HeroSection() {
   const { darkMode } = useUIStore()
   const { user, isAuthenticated } = useAuthStore()
 
-  const isStaff = user?.role === 'super_admin' || user?.role === 'zonal_admin' || user?.role === 'officer'
-  const dashboardLink = user?.role === 'officer' ? '/dashboard/officer' : 
-                        (user?.role === 'super_admin' || user?.role === 'zonal_admin') ? '/dashboard/admin' : 
-                        '/dashboard/citizen'
+  const isStaff = user?.role === 'admin'
+  const dashboardLink = user?.role === 'admin' ? '/dashboard/admin' : '/dashboard/citizen'
 
   return (
-    <section className="relative min-h-[90vh] flex flex-col items-center justify-center pt-20 px-4 overflow-hidden">
-      {/* Clean Theme-Aware Background */}
+    <section className="relative min-h-[90vh] flex flex-col items-center justify-center pt-24 pb-12 px-6 overflow-hidden">
+      {/* Background with texture and subtle depth */}
       <div className={clsx(
-        "absolute inset-0 pointer-events-none z-0 transition-all duration-1000",
-        darkMode ? "bg-[#020617]" : "bg-white"
+        "absolute inset-0 z-0",
+        darkMode ? "bg-brand-navy" : "bg-brand-cream"
       )}>
-        {/* Generated Hero Background Image */}
-        <div className="absolute inset-0 z-0">
-          <img 
-            src="/simple_clean_modern_city_view_1778250034872.png" 
-            alt="Smart City" 
-            className={clsx(
-              "w-full h-full object-cover transition-all duration-1000",
-              darkMode ? "opacity-30 grayscale-[0.3] brightness-[0.4] contrast-[1.1]" : "opacity-15 grayscale-0 brightness-100 contrast-100"
-            )}
-          />
-          <div className={clsx(
-            "absolute inset-0",
-            darkMode ? "bg-gradient-to-b from-[#020617] via-transparent to-[#020617]" : "bg-gradient-to-b from-white via-transparent to-white"
-          )} />
-        </div>
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary-500/5 rounded-full -z-10" />
-        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-indigo-500/5 rounded-full -z-10" />
+        <div className="absolute inset-0 opacity-[0.12] dark:opacity-[0.05] bg-noise" />
+        <div className="absolute top-0 left-0 w-full h-full bg-dots [background-size:20px_20px] opacity-50 dark:opacity-20" />
+        <div className="absolute top-1/4 -right-24 w-96 h-96 bg-brand-indigo/10 rounded-full blur-[100px]" />
+        <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-brand-amber/5 rounded-full blur-[100px]" />
       </div>
 
-      <motion.div 
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, ease: 'easeOut' }}
-        className="relative z-10 text-center max-w-5xl mx-auto"
-      >
-        <Badge className="mb-6 bg-primary-500/10 text-primary-400 border border-primary-500/20 px-4 py-2">
-          ✨ Transforming Civic Engagement with AI
-        </Badge>
-        
-        <h1 className="text-5xl md:text-8xl font-black font-display leading-[1.1] text-slate-900 dark:text-white mb-8">
-          Report. Track. <br />
-          <span className="gradient-text animate-pulse-glow">Resolve.</span>
-        </h1>
-        
-        <p className="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed">
-          The all-in-one platform for citizens to voice concerns, track resolutions in real-time, 
-          and help authorities build smarter cities.
-        </p>
-        
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
-          {!isAuthenticated ? (
-            <Link to="/login">
-              <Button size="xl" glow rightIcon={<ArrowRight size={20} />}>
-                Join the Watch & Start
-              </Button>
-            </Link>
-          ) : isStaff ? (
-            <Link to={dashboardLink}>
-              <Button size="xl" glow rightIcon={<ArrowRight size={20} />}>
-                {user?.role === 'officer' ? 'Open Duty Terminal' : 'Launch City HQ'}
-              </Button>
-            </Link>
-          ) : (
-            <>
-              <Link to="/complaints/new">
-                <Button size="xl" glow rightIcon={<ArrowRight size={20} />}>
-                  Fix My Neighborhood
+      <div className="max-w-7xl mx-auto w-full relative z-10 grid lg:grid-cols-12 gap-12 items-center">
+        <motion.div 
+          initial={{ opacity: 0, x: -30 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.8, ease: 'easeOut' }}
+          className="lg:col-span-7 text-left"
+        >
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-indigo/10 border border-brand-indigo/20 text-brand-indigo dark:text-indigo-300 text-xs font-bold uppercase tracking-widest mb-8">
+            <span className="w-2 h-2 rounded-full bg-brand-indigo animate-pulse" />
+            Official City Portal
+          </div>
+          
+          <h1 className="text-6xl md:text-8xl font-black font-display leading-[0.95] text-brand-navy dark:text-white mb-8 tracking-tighter">
+            Better Cities <br />
+            <span className="text-brand-indigo italic">Built Together.</span>
+          </h1>
+          
+          <p className="text-xl text-slate-500 dark:text-slate-400 max-w-xl mb-12 leading-relaxed font-medium">
+            A collaborative platform for citizens and authorities to report, track, 
+            and resolve public issues with transparency and accountability.
+          </p>
+          
+          <div className="flex flex-col sm:flex-row items-center gap-5 mb-16">
+            {!isAuthenticated ? (
+              <Link to="/login">
+                <Button size="xl" className="btn-handcrafted px-10 shadow-handcrafted bg-brand-navy dark:bg-brand-indigo hover:translate-y-[-2px] transition-transform">
+                  Report an Issue
                 </Button>
               </Link>
-              <Link to="/dashboard/citizen">
-                <Button variant="secondary" size="xl">
-                  Citizen Portal
+            ) : (
+              <Link to={dashboardLink}>
+                <Button size="xl" className="btn-handcrafted px-10 shadow-handcrafted bg-brand-navy dark:bg-brand-indigo hover:translate-y-[-2px] transition-transform">
+                  Access Portal
                 </Button>
               </Link>
-            </>
-          )}
-        </div>
+            )}
+            <Link to="/about">
+              <button className="text-sm font-bold text-slate-600 dark:text-slate-400 hover:text-brand-indigo transition-colors flex items-center gap-2 group">
+                How it works <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+              </button>
+            </Link>
+          </div>
 
-        {/* Floating Feature Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-          {[
-            { icon: <Zap className="text-yellow-400" />, label: 'Fast Resolution', desc: 'Average 48hr fix time' },
-            { icon: <Shield className="text-emerald-400" />, label: 'Verified Proof', desc: 'Resolution with images' },
-            { icon: <Globe className="text-primary-400" />, label: 'Citizen Power', desc: '100% Transparency' },
-          ].map((feature, i) => (
-            <div 
-              key={i}
-              className="relative overflow-hidden bg-white/50 dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-200 dark:border-white/10 flex items-center gap-4 text-left shadow-[0_0_15px_rgba(0,0,0,0.05)]"
-            >
-              <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full -mr-12 -mt-12" />
-              <div className="absolute -right-8 -bottom-8 w-24 h-24 bg-white/5 rounded-full" />
-              <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center relative z-10">
-                {feature.icon}
-              </div>
-              <div className="relative z-10">
-                <p className="text-sm font-bold text-slate-900 dark:text-white">{feature.label}</p>
-                <p className="text-xs text-slate-500">{feature.desc}</p>
-              </div>
+          <div className="flex items-center gap-8 border-t border-slate-200 dark:border-white/5 pt-10">
+            <div>
+              <p className="text-2xl font-black text-brand-navy dark:text-white">12.4k</p>
+              <p className="text-xs text-slate-500 uppercase font-bold tracking-widest">Issues Resolved</p>
             </div>
-          ))}
-        </div>
-      </motion.div>
+            <div className="w-px h-8 bg-slate-200 dark:bg-white/10" />
+            <div>
+              <p className="text-2xl font-black text-brand-navy dark:text-white">98%</p>
+              <p className="text-xs text-slate-500 uppercase font-bold tracking-widest">SLA Compliance</p>
+            </div>
+          </div>
+        </motion.div>
+
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 1, delay: 0.2 }}
+          className="md:col-span-5 lg:col-span-5 relative hidden md:block"
+        >
+          <div className="relative z-10 glass p-2 rounded-handcrafted-lg border-2 border-white/20 shadow-premium hover:shadow-[0_0_40px_rgba(79,70,229,0.4)] hover:border-brand-indigo/40 transition-all duration-700 overflow-hidden">
+            <img 
+              src="/hero_image.png" 
+              alt="CivicEye Platform Connectivity" 
+              className="w-full h-auto rounded-lg transition-all duration-700 hover:scale-105"
+            />
+          </div>
+          {/* Decorative elements to break symmetry */}
+          <div className="absolute -top-6 -left-6 w-24 h-24 bg-brand-indigo/20 rounded-full blur-2xl" />
+          <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-brand-amber/10 rounded-full blur-3xl" />
+        </motion.div>
+      </div>
     </section>
   )
 }

@@ -65,7 +65,7 @@ export const MOCK_USER: User = {
     { id: 'b2', name: 'Civic Hero', icon: '🦸', earnedAt: subDays(new Date(), 5).toISOString() }
   ],
   rewardPoints: 450, complaintsCount: 12, resolvedCount: 9, joinedAt: subDays(new Date(), 60).toISOString(),
-  lastLoginAt: new Date().toISOString(), loginHistory: [], isVerified: true, aadhaarVerified: true,
+  lastLoginAt: new Date().toISOString(), loginHistory: [], isVerified: true,
   twoFactorEnabled: false, privacyMode: false, language: 'en', theme: 'dark', fontSize: 'md',
   highContrast: false, reducedMotion: false, dyslexicFont: false,
   notifications: { push: true, email: true, sms: false, whatsapp: true },

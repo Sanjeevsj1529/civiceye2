@@ -22,8 +22,9 @@
   background: var(--bg);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  --dot-color: #020617; /* Slate-950 for absolute visibility in light mode */
+  --noise-url: url('https://www.transparenttextures.com/patterns/gray-paper.png'); /* Darker noise for light mode */
 
   @media (max-width: 1024px) {
     font-size: 16px;
@@ -43,6 +44,8 @@
     --social-bg: rgba(47, 48, 58, 0.5);
     --shadow:
       rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
+    --dot-color: #cbd5e1; /* Subtle in dark mode */
+    --noise-url: url('https://www.transparenttextures.com/patterns/natural-paper.png'); /* White noise for dark mode */
   }
 
   #social .button-icon {
@@ -293,4 +296,19 @@ code {
     right: 0;
     border-right-color: var(--border);
   }
+}
+
+/* Fix browser autofill "white box" issue */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 30px #020617 inset !important;
+    -webkit-text-fill-color: white !important;
+    transition: background-color 5000s ease-in-out 0s;
+}
+
+input:-webkit-autofill::first-line {
+    font-family: var(--sans) !important;
+    font-size: 14px !important;
 }

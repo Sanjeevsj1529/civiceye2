@@ -35,7 +35,6 @@ export const apiService = {
       lastLoginAt: new Date().toISOString(),
       loginHistory: [],
       isVerified: true,
-      aadhaarVerified: true,
       twoFactorEnabled: false,
       privacyMode: false,
       language: 'en',

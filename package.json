@@ -9,5 +9,8 @@
     "dev:backend": "cd backend && npm run dev",
     "install:all": "npm install --prefix frontend && npm install --prefix backend",
     "start": "npm run dev:frontend"
+  },
+  "dependencies": {
+    "firebase": "^12.13.0"
   }
 }

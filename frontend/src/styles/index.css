@@ -6,43 +6,45 @@
 
 @layer base {
   :root {
-    --primary: 6, 182, 212;
-    --brand-violet: 139, 92, 246;
+    --primary: 79, 70, 229;
+    --navy: 15, 23, 42;
+    --amber: 245, 158, 11;
   }
 
   body {
-    @apply bg-slate-50 dark:bg-[#020617] text-slate-900 dark:text-slate-200 antialiased selection:bg-primary-500/30 selection:text-white;
+    @apply bg-brand-cream dark:bg-brand-navy text-slate-900 dark:text-slate-200 antialiased selection:bg-brand-indigo/30 selection:text-white;
+    background-image: url('https://www.transparenttextures.com/patterns/natural-paper.png');
   }
   
-  /* Light Mode Specific Overrides for High Contrast */
-  .light .border-white\/10 {
-    @apply border-slate-300;
-  }
-  
-  .light .bg-white\/5 {
-    @apply bg-slate-100;
+  .dark body {
+    background-image: url('https://www.transparenttextures.com/patterns/black-paper.png');
   }
 
   h1, h2, h3, h4, h5, h6 {
-    @apply font-display;
+    @apply font-display tracking-tight;
   }
 }
 
 @layer components {
   .glass {
-    @apply bg-white dark:bg-dark-900 border border-slate-300 dark:border-white/10 shadow-premium transition-all duration-300 text-slate-900 dark:text-white;
+    @apply bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-white/5 shadow-premium transition-all duration-300 text-slate-900 dark:text-white backdrop-blur-md;
   }
   
   .glass:hover {
-    @apply border-primary-500/50 shadow-glow-blue;
+    @apply border-brand-indigo/30 shadow-soft;
   }
 
   .gradient-text {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary-400 via-primary-500 to-brand-violet;
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-brand-navy via-brand-indigo to-brand-slate dark:from-white dark:to-slate-400;
   }
 
   .input-field {
-    @apply w-full bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl px-4 py-3 text-sm text-slate-900 dark:text-white focus:border-primary-500/50 outline-none transition-all placeholder:text-slate-400 dark:placeholder:text-slate-700;
+    @apply w-full bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white focus:border-brand-indigo/50 outline-none transition-all placeholder:text-slate-400 dark:placeholder:text-slate-600 shadow-sm;
+  }
+
+  .btn-handcrafted {
+    @apply relative overflow-hidden transition-all duration-300 active:scale-95;
+    border-radius: 4px 12px 6px 16px;
   }
 
   .custom-scrollbar::-webkit-scrollbar {
@@ -55,7 +57,7 @@
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    @apply bg-white/10 rounded-full hover:bg-white/20;
+    @apply bg-slate-300 dark:bg-white/10 rounded-full hover:bg-slate-400 dark:hover:bg-white/20;
   }
 }
 
