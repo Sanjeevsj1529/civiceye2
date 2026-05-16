@@ -1,8 +1,5 @@
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { COMPLAINTS, CATEGORY_META } from '../../utils/mockData'
-import { clsx } from 'clsx'
-import { Zap, CheckCircle2, AlertTriangle, Info } from 'lucide-react'
 
 const TICKER_MESSAGES = [
   "🚨 New: Water leakage reported in East Ward (Sector 14)",
@@ -24,33 +21,46 @@ export function LiveTicker() {
   }, [])
 
   return (
-    <div className="bg-dark-950 border-y border-white/5 py-3 relative overflow-hidden">
-      <div className="max-w-[1600px] mx-auto px-6 flex items-center gap-6">
-        <div className="flex items-center gap-2 px-3 py-1 rounded-lg bg-primary-500/10 border border-primary-500/20 whitespace-nowrap">
-          <span className="w-2 h-2 bg-primary-500 rounded-full animate-pulse" />
-          <span className="text-[10px] font-bold text-primary-400 uppercase tracking-widest">Live Updates</span>
-        </div>
-        
-        <div className="flex-1 overflow-hidden relative h-5">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="relative overflow-hidden border-y border-white/10 bg-[#030712]/90 py-3.5 backdrop-blur-xl"
+    >
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-brand-indigo/10 via-transparent to-neon-cyan/10" />
+      <motion.div className="relative mx-auto flex max-w-[1600px] items-center gap-6 px-6">
+        <motion.div
+          whileHover={{ scale: 1.02 }}
+          className="flex items-center gap-2 whitespace-nowrap rounded-full border border-neon-cyan/25 bg-neon-cyan/10 px-3 py-1.5 shadow-[0_0_24px_-8px_rgba(34,211,238,0.5)]"
+        >
+          <span className="relative flex h-2 w-2">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-neon-cyan opacity-60" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-neon-cyan" />
+          </span>
+          <span className="text-[10px] font-black uppercase tracking-[0.28em] text-neon-cyan">
+            Live Updates
+          </span>
+        </motion.div>
+
+        <div className="relative h-5 flex-1 overflow-hidden">
           <AnimatePresence mode="wait">
             <motion.p
               key={index}
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: -20, opacity: 0 }}
-              className="text-sm text-slate-400 absolute inset-0"
+              className="absolute inset-0 text-sm text-slate-400"
             >
               {TICKER_MESSAGES[index]}
             </motion.p>
           </AnimatePresence>
         </div>
 
-        <div className="hidden lg:flex items-center gap-6 text-[10px] font-bold text-slate-600 uppercase tracking-widest whitespace-nowrap">
+        <div className="hidden items-center gap-6 whitespace-nowrap text-[10px] font-bold uppercase tracking-widest text-slate-500 lg:flex">
           <span>Active Officers: 142</span>
           <span>SLA Compliance: 94.2%</span>
           <span>API Latency: 24ms</span>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   )
 }

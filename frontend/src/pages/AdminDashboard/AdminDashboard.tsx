@@ -224,883 +224,328 @@ export default function AdminDashboard() {
 
   if (isLoading) {
     return (
-      <div className="relative min-h-screen overflow-hidden bg-[#030712] pt-24 pb-20 px-6 flex items-center justify-center">
-        <div className="pointer-events-none absolute inset-0 bg-mesh opacity-40" />
-        <div className="absolute left-1/4 top-1/3 h-72 w-72 -translate-x-1/2 rounded-full bg-brand-indigo/25 blur-[120px]" />
-        <div className="absolute bottom-1/4 right-1/4 h-56 w-56 rounded-full bg-neon-cyan/15 blur-[100px]" />
+      <div className="relative min-h-screen overflow-hidden bg-[#020617] pt-24 pb-20 px-6 flex items-center justify-center">
+        <div className="pointer-events-none absolute inset-0 bg-mesh opacity-20" />
+        <div className="absolute left-1/4 top-1/3 h-96 w-96 -translate-x-1/2 rounded-full bg-brand-indigo/15 blur-[120px] animate-pulse-slow" />
+        <div className="absolute bottom-1/4 right-1/4 h-80 w-80 rounded-full bg-neon-cyan/10 blur-[100px] animate-pulse-slow" style={{ animationDelay: '2s' }} />
         <div className="relative text-center">
-          <div className="relative mx-auto mb-6 h-16 w-16">
-            <div className="absolute inset-0 animate-spin rounded-2xl border-2 border-brand-indigo/30 border-t-neon-cyan" />
-            <div className="absolute inset-3 rounded-xl bg-gradient-to-br from-brand-indigo/80 to-neon-cyan/40 shadow-glow-blue" />
+          <div className="relative mx-auto mb-8 h-20 w-20">
+            <div className="absolute inset-0 animate-spin rounded-3xl border-2 border-white/10 border-t-neon-cyan drop-shadow-lg" />
+            <div className="absolute inset-4 rounded-2xl bg-gradient-to-br from-brand-indigo/60 to-neon-cyan/30 shadow-glow-blue backdrop-blur-md" />
           </div>
-          <p className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-500 animate-pulse">Syncing command center</p>
+          <p className="text-xs font-black uppercase tracking-[0.4em] text-slate-400 animate-pulse drop-shadow-sm">Syncing Command Center</p>
         </div>
       </div>
     );
   }
   
   return (
-    <div className="min-h-screen pb-20 pt-32 px-6 relative overflow-hidden">
-      <div className="pointer-events-none absolute inset-0 z-0 bg-gradient-to-b from-brand-indigo/[0.06] via-transparent to-transparent dark:from-brand-indigo/10" />
-      <div className="absolute inset-0 z-0 opacity-[0.35] dark:opacity-[0.12] pointer-events-none">
-        <div className="absolute inset-0 bg-noise" />
-        <div className="absolute top-0 left-0 w-full h-full bg-dots [background-size:40px_40px] animate-grid-pan" />
-        <div className="absolute -top-40 right-0 h-[420px] w-[420px] rounded-full bg-brand-indigo/15 blur-[100px] dark:bg-brand-indigo/25" />
-        <div className="absolute bottom-0 left-1/4 h-[320px] w-[320px] rounded-full bg-neon-cyan/10 blur-[90px]" />
-
-        <div className="absolute top-1/2 left-4 w-px h-32 bg-gradient-to-b from-transparent via-slate-300 dark:via-white/15 to-transparent -translate-y-1/2" />
-        <div className="absolute top-1/2 right-4 w-px h-32 bg-gradient-to-b from-transparent via-slate-300 dark:via-white/15 to-transparent -translate-y-1/2" />
+    <div className="fixed inset-0 overflow-hidden bg-[#020617] pointer-events-auto">
+      {/* 1. Fullscreen Map Background */}
+      <div className="absolute inset-0 z-0">
+        <MapContainer 
+          center={[28.6139, 77.2090]} 
+          zoom={12} 
+          className="h-full w-full custom-dark-map filter saturate-[1.2] contrast-125 opacity-70"
+          zoomControl={false}
+        >
+          <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" />
+          {scopedComplaints.map(c => (
+            <Circle 
+              key={c.id}
+              center={[c.location.lat, c.location.lng]}
+              radius={400}
+              pathOptions={{ 
+                fillColor: c.severity >= 7 ? '#f43f5e' : '#06b6d4', 
+                color: 'transparent',
+                fillOpacity: 0.6
+              }}
+            >
+              <Popup className="custom-cinematic-popup">
+                <div className="p-3">
+                  <p className="text-[10px] font-black uppercase text-neon-cyan mb-1 tracking-widest">{c.referenceId}</p>
+                  <p className="text-sm font-black text-white leading-tight drop-shadow-sm">{c.title}</p>
+                </div>
+              </Popup>
+            </Circle>
+          ))}
+        </MapContainer>
+        {/* Map Overlays for depth */}
+        <div className="absolute inset-0 bg-gradient-to-t from-[#020617] via-transparent to-[#020617]/50 pointer-events-none z-10" />
+        <div className="absolute inset-0 bg-noise opacity-[0.03] mix-blend-overlay pointer-events-none z-10" />
       </div>
 
-      <div className="max-w-[1600px] mx-auto relative z-10">
-        {/* Header */}
-        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-10 mb-16">
-          <div className="max-w-3xl">
-            <div className="flex items-center gap-4 mb-6">
-              <div className="px-3 py-1 rounded-full bg-brand-indigo/10 border border-brand-indigo/20 text-brand-indigo dark:text-indigo-400 text-[10px] font-black uppercase tracking-widest">
-                <span className="w-1.5 h-1.5 rounded-full bg-brand-indigo inline-block mr-2 animate-pulse" />
-                Live Command Center
-              </div>
-              <div className="h-px w-20 bg-slate-200 dark:bg-white/10" />
+      {/* HUD UI LAYER */}
+      <div className="absolute inset-0 z-20 pointer-events-none flex flex-col p-6 pt-24 pb-24 lg:p-8 lg:pt-24 lg:pb-32">
+        
+        {/* Top HUD: Title & Mode Toggle */}
+        <div className="flex justify-between items-start w-full">
+          <motion.div 
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="glass-premium p-6 rounded-[2rem] border border-white/10 shadow-glow-lg pointer-events-auto panel-shine max-w-sm backdrop-blur-3xl bg-[#020617]/40"
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-2 h-2 rounded-full bg-neon-cyan animate-pulse shadow-[0_0_8px_#06b6d4]" />
+              <span className="text-[10px] font-black uppercase tracking-[0.3em] text-neon-cyan">Live Command</span>
             </div>
-            <h1 className="text-5xl md:text-7xl font-black text-brand-navy dark:text-white tracking-tighter leading-[0.9]">
-              City Operations <br />
-              <span className="text-brand-indigo italic">Management HQ</span>
-            </h1>
-            <p className="text-xl text-slate-500 dark:text-slate-400 mt-8 font-medium leading-relaxed">
-              Real-time administrative control over city-wide reports, field personnel, and infrastructure health.
-            </p>
-          </div>
-          <div className="flex items-center gap-4">
-            {/* Operational Patch */}
-            <div className="hidden xl:flex items-center gap-3 px-4 py-2 rounded-2xl bg-white dark:bg-white/5 border-2 border-brand-navy/10 dark:border-white/10 rotate-1 shadow-soft">
-              <div className="w-8 h-8 rounded-full bg-brand-indigo flex items-center justify-center text-white text-[10px] font-black">CE</div>
-              <div>
-                <p className="text-[8px] font-black uppercase text-slate-400 leading-none">Ops Unit</p>
-                <p className="text-[10px] font-bold text-brand-navy dark:text-white">v2.4.0-STABLE</p>
-              </div>
-            </div>
-            <Button variant="outline" size="xl" className="btn-handcrafted border-2 border-brand-navy dark:border-white/20 text-brand-navy dark:text-white">
-              <Download size={20} className="mr-2" /> Operations Report
-            </Button>
-            <Button size="xl" className="btn-handcrafted px-10 shadow-handcrafted bg-brand-navy dark:bg-brand-indigo">
-              <Zap size={20} className="mr-2" /> Broadcast Alert
-            </Button>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <div className="relative">
-            <button 
-              onClick={() => setShowNotification(!showNotification)}
-              className="w-12 h-12 rounded-xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/10 transition-all shadow-soft relative"
-            >
-              <Bell size={24} />
-              {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-6 h-6 bg-rose-500 text-white text-[10px] font-black rounded-full flex items-center justify-center ring-4 ring-brand-cream dark:ring-brand-navy">
-                  {unreadCount}
-                </span>
-              )}
-            </button>
-
-              <AnimatePresence>
-                {showNotification && (
-                  <>
-                    <div 
-                      className="fixed inset-0 z-40" 
-                      onClick={() => setShowNotification(false)}
-                    />
-                    <motion.div
-                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                      className="absolute right-0 mt-4 w-80 z-50 origin-top-right"
-                    >
-                      <Card className="shadow-2xl border-white/10 overflow-hidden">
-                        <div className="p-4 border-b border-white/5 bg-slate-50/50 dark:bg-white/5 flex items-center justify-between">
-                          <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-widest">Alerts</h3>
-                          <button 
-                            onClick={() => markAllAsRead()}
-                            className="text-[10px] font-black text-primary-500 uppercase hover:underline"
-                          >
-                            Clear All
-                          </button>
-                        </div>
-                        <div className="max-h-[400px] overflow-y-auto">
-                          {notifications.length === 0 ? (
-                            <div className="p-8 text-center">
-                              <Bell size={32} className="mx-auto mb-3 text-slate-700 opacity-20" />
-                              <p className="text-xs text-slate-500 font-medium">All clear! No new alerts.</p>
-                            </div>
-                          ) : (
-                            <div className="divide-y divide-white/5">
-                              {notifications.map((n: any) => (
-                                <div 
-                                  key={n.id} 
-                                  className={clsx(
-                                    "p-4 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors cursor-pointer relative",
-                                    !n.isRead && "bg-primary-500/5"
-                                  )}
-                                  onClick={() => {
-                                    useNotificationStore.getState().markAsRead(n.id);
-                                    if (n.referenceId) {
-                                      setTab('management');
-                                      setDeskSearch(n.referenceId);
-                                    }
-                                    setShowNotification(false);
-                                  }}
-                                >
-                                  {!n.isRead && <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary-500" />}
-                                  <p className="text-xs font-bold text-slate-900 dark:text-white mb-1">{n.title}</p>
-                                  <p className="text-[10px] text-slate-500 line-clamp-2 leading-relaxed">{n.message}</p>
-                                  <p className="text-[9px] text-slate-400 mt-2 uppercase font-black tracking-tighter">
-                                    {formatDistanceToNow(new Date(n.createdAt?.toDate?.() || n.createdAt), { addSuffix: true })}
-                                  </p>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      </Card>
-                    </motion.div>
-                  </>
-                )}
-              </AnimatePresence>
-          </div>
-        </div>
-
-        {/* Navigation Tabs - Handcrafted feel */}
-        <div className="flex flex-wrap items-center gap-3 mb-12">
-          {[
-            { id: 'analytics', label: 'Operations Analytics', icon: <TrendingUp size={16} /> },
-            { id: 'management', label: 'Triage Desk', icon: <ClipboardList size={16} /> },
-            { id: 'users', label: 'Personnel Directory', icon: <Users size={16} /> },
-          ].map(t => (
-            <button
-              key={t.id}
-              onClick={() => setTab(t.id as any)}
-              className={clsx(
-                'flex items-center gap-3 px-8 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-300 border-2',
-                tab === t.id 
-                  ? 'bg-brand-navy text-white border-brand-navy dark:bg-white dark:text-brand-navy dark:border-white shadow-handcrafted' 
-                  : 'text-slate-500 border-slate-200 dark:border-white/5 hover:border-brand-indigo dark:hover:border-white/20'
-              )}
-            >
-              {t.icon} {t.label}
-            </button>
-          ))}
-        </div>
-
-        {tab === 'analytics' && (
-          <div className="space-y-12">
-            {/* KPI Section - Breaking Symmetry */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
+            <h1 className="text-3xl font-black text-white tracking-tighter leading-none mb-2">City Ops</h1>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{areaName}</p>
+            
+            <div className="mt-6 flex flex-wrap gap-2">
               {[
-                { label: 'Active Reports', value: scopedComplaints.filter(c => !['resolved', 'verified', 'closed'].includes(c.status)).length.toString(), icon: '🚨', trend: 12 },
-                { label: 'Resolution Rate', value: '94.2%', icon: '✅', trend: 5 },
-                { label: 'Live Personnel', value: fieldOfficers.filter(o => o.isOnline !== false).length.toString(), icon: '👷', trend: 0 },
-                { label: 'Critical Escalations', value: criticalAlerts.length.toString(), icon: '⚠️', trend: -2 },
-              ].map((s, i) => (
-                <motion.div
-                  key={s.label}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.1 }}
-                  className="relative group"
+                { id: 'analytics', icon: <TrendingUp size={14} />, label: 'Analytics' },
+                { id: 'management', icon: <ClipboardList size={14} />, label: 'Triage' },
+                { id: 'users', icon: <Users size={14} />, label: 'Personnel' }
+              ].map(t => (
+                <button
+                  key={t.id}
+                  onClick={() => setTab(t.id as any)}
+                  className={clsx(
+                    'flex items-center gap-2 px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border',
+                    tab === t.id ? 'bg-white/10 text-white border-neon-cyan shadow-[0_0_15px_rgba(6,182,212,0.3)]' : 'bg-white/5 text-slate-400 border-white/5 hover:bg-white/10'
+                  )}
                 >
-                  <div className="glass-premium p-8 rounded-handcrafted border border-white/10 dark:border-white/[0.08] relative overflow-hidden hover:translate-y-[-8px] transition-all duration-500 hover:shadow-glow-blue">
-                    <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-brand-indigo/15 to-transparent rounded-bl-[4rem] z-0" />
-                    <div className="relative z-10">
-                      <div className="flex items-center justify-between mb-6">
-                        <span className="text-3xl grayscale group-hover:grayscale-0 transition-all">{s.icon}</span>
-                        {s.trend !== 0 && (
-                          <span className={clsx(
-                            "text-[10px] font-black px-3 py-1 rounded-full",
-                            s.trend > 0 ? "bg-emerald-500/10 text-emerald-500" : "bg-rose-500/10 text-rose-500"
-                          )}>{s.trend > 0 ? '↑' : '↓'} {Math.abs(s.trend)}%</span>
-                        )}
-                      </div>
-                      <p className="text-5xl font-black text-brand-navy dark:text-white tracking-tighter leading-none">{s.value}</p>
-                      <p className="text-xs text-slate-500 font-black uppercase tracking-widest mt-4">{s.label}</p>
-                    </div>
-                  </div>
-                </motion.div>
+                  {t.icon} {t.label}
+                </button>
               ))}
             </div>
+          </motion.div>
 
-            {/* Charts Grid */}
-            <div className="grid lg:grid-cols-3 gap-8">
-              <Card className="lg:col-span-2 p-8 overflow-hidden relative border-white/10 shadow-glow-lg dark:border-white/[0.07]">
-                <div className="flex items-center justify-between mb-8">
-                  <h3 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                    <MapIcon size={20} className="text-primary-500" /> Live City Pulse: Area Intelligence
-                  </h3>
-                  <div className="flex items-center gap-2 p-1 bg-slate-50 dark:bg-white/5 rounded-xl border border-slate-200 dark:border-white/5">
-                    <button 
-                      onClick={() => setPulseView('chart')}
-                      className={clsx('p-1.5 rounded-lg transition-all', pulseView === 'chart' ? 'bg-primary-500 text-slate-900 dark:text-white' : 'text-slate-500 hover:text-slate-900 dark:text-white')}
-                    >
-                      <Activity size={16} />
-                    </button>
-                    <button 
-                      onClick={() => setPulseView('map')}
-                      className={clsx('p-1.5 rounded-lg transition-all', pulseView === 'map' ? 'bg-primary-500 text-slate-900 dark:text-white' : 'text-slate-500 hover:text-slate-900 dark:text-white')}
-                    >
-                      <MapIcon size={16} />
-                    </button>
-                  </div>
-                </div>
-
-                <AnimatePresence mode="wait">
-                  {pulseView === 'chart' ? (
-                    <motion.div key="chart" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-80 w-full">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={dynamicChartData}>
-                          <defs>
-                            <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.3}/>
-                              <stop offset="95%" stopColor="#06b6d4" stopOpacity={0}/>
-                            </linearGradient>
-                          </defs>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
-                          <XAxis dataKey="name" stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} />
-                          <YAxis stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} />
-                          <Tooltip 
-                            contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #ffffff10', borderRadius: '16px' }}
-                            itemStyle={{ color: '#fff' }}
-                          />
-                          <Area type="monotone" dataKey="count" stroke="#06b6d4" strokeWidth={3} fillOpacity={1} fill="url(#colorCount)" />
-                          <Area type="monotone" dataKey="resolved" stroke="#10b981" strokeWidth={3} fillOpacity={0} />
-                        </AreaChart>
-                      </ResponsiveContainer>
-                    </motion.div>
-                  ) : (
-                    <motion.div key="map" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-80 w-full rounded-2xl border border-slate-200 dark:border-white/5 overflow-hidden relative">
-                       <MapContainer 
-                          center={[28.6139, 77.2090]} 
-                          zoom={12} 
-                          className="h-full w-full"
-                          zoomControl={false}
-                        >
-                          <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                          {scopedComplaints.map(c => (
-                            <Circle 
-                              key={c.id}
-                              center={[c.location.lat, c.location.lng]}
-                              radius={300}
-                              pathOptions={{ 
-                                fillColor: c.severity >= 7 ? '#f43f5e' : '#06b6d4', 
-                                color: 'transparent',
-                                fillOpacity: 0.6
-                              }}
-                            >
-                              <Popup className="custom-popup">
-                                <div className="p-2">
-                                  <p className="text-[10px] font-black uppercase text-slate-500 mb-1">{c.referenceId}</p>
-                                  <p className="text-xs font-bold text-slate-900">{c.title}</p>
-                                  <p className="text-[10px] text-slate-600 mt-1">{c.location.address}</p>
-                                </div>
-                              </Popup>
-                            </Circle>
-                          ))}
-                        </MapContainer>
-                        <div className="absolute bottom-4 left-4 z-[1000] glass px-3 py-1.5 rounded-lg border border-white/10">
-                          <div className="flex items-center gap-4">
-                            <div className="flex items-center gap-2 text-[8px] text-slate-900 dark:text-white font-bold uppercase">
-                              <div className="w-2 h-2 bg-primary-500 rounded-full" /> Normal
-                            </div>
-                            <div className="flex items-center gap-2 text-[8px] text-slate-900 dark:text-white font-bold uppercase">
-                              <div className="w-2 h-2 bg-rose-500 rounded-full" /> Critical
-                            </div>
-                          </div>
-                        </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </Card>
-
-              <Card className="p-8">
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-8">Category Mix</h3>
-                <div className="h-64 w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={dynamicCategoryData}
-                        innerRadius={60}
-                        outerRadius={80}
-                        paddingAngle={5}
-                        dataKey="value"
-                      >
-                        {dynamicCategoryData.map((_, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-                <div className="space-y-3 mt-6">
-                  {dynamicCategoryData.map((c, i) => (
-                    <div key={c.name} className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
-                        <span className="text-xs text-slate-400">{c.name}</span>
-                      </div>
-                      <span className="text-xs font-bold text-slate-900 dark:text-white">{c.value}</span>
-                    </div>
-                  ))}
-                </div>
-              </Card>
-            </div>
-            
-            {/* Department Summary - Added as per request */}
-            <div className="grid lg:grid-cols-3 gap-8 mt-12">
-              <Card className="lg:col-span-2 p-8 border-white/10 shadow-premium">
-                <h3 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2 mb-8">
-                  <Building2 size={20} className="text-primary-500" /> Department-wise Personnel Availability
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {departmentStats.map((dept, i) => (
-                    <div key={dept.name} className="p-6 rounded-3xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:border-brand-indigo/50 transition-all group">
-                      <div className="flex items-center justify-between mb-4">
-                        <span className="text-sm font-black text-brand-navy dark:text-white uppercase tracking-widest">{dept.name}</span>
-                        <div className="flex items-center gap-2">
-                           <div className={clsx("w-2 h-2 rounded-full animate-pulse", dept.online > 0 ? "bg-emerald-500" : "bg-slate-500")} />
-                           <span className="text-[10px] font-bold text-slate-500">{dept.online} Live</span>
-                        </div>
-                      </div>
-                      <div className="flex items-end justify-between">
-                         <div className="flex -space-x-2">
-                           {fieldOfficers.filter(o => o.department === dept.name).slice(0, 4).map((o, idx) => (
-                             <div key={o.id} className="w-8 h-8 rounded-full border-2 border-white dark:border-dark-900 bg-brand-indigo flex items-center justify-center text-[10px] text-white font-black overflow-hidden shadow-sm">
-                               {o.avatar ? <span className="text-sm">{o.avatar}</span> : o.name.charAt(0)}
-                             </div>
-                           ))}
-                           {dept.total > 4 && (
-                             <div className="w-8 h-8 rounded-full border-2 border-white dark:border-dark-900 bg-slate-200 dark:bg-white/10 flex items-center justify-center text-[10px] text-slate-500 font-bold">
-                               +{dept.total - 4}
-                             </div>
-                           )}
-                         </div>
-                         <div className="text-right">
-                            <p className="text-2xl font-black text-brand-navy dark:text-white">{dept.total}</p>
-                            <p className="text-[8px] font-black uppercase text-slate-400">Total Personnel</p>
-                         </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </Card>
-
-              <Card className="p-8 border-white/10">
-                <div className="flex items-center justify-between mb-8">
-                  <h3 className="text-lg font-bold text-slate-900 dark:text-white">Active Deployments</h3>
-                  <Badge variant="info">Live</Badge>
-                </div>
-                <div className="space-y-6">
-                  {complaints.filter(c => c.status === 'assigned' || c.status === 'in_progress').slice(0, 5).map(c => {
-                    const officer = fieldOfficers.find(o => o.id === c.assignedOfficerId);
-                    return (
-                      <div key={c.id} className="flex items-center gap-4 group">
-                        <div className="w-2 h-10 rounded-full bg-brand-indigo/20 group-hover:bg-brand-indigo transition-all" />
-                        <div className="flex-1">
-                          <p className="text-[10px] font-black text-brand-indigo uppercase tracking-widest">{c.referenceId}</p>
-                          <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{c.title}</p>
-                          <p className="text-[9px] text-slate-500 mt-0.5">Assigned to: <span className="text-brand-navy dark:text-slate-300 font-bold">{officer?.name || 'Unknown Officer'}</span></p>
-                        </div>
-                      </div>
-                    );
-                  })}
-                  {complaints.filter(c => c.status === 'assigned' || c.status === 'in_progress').length === 0 && (
-                    <div className="py-10 text-center">
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">No active deployments</p>
-                    </div>
-                  )}
-                </div>
-              </Card>
-            </div>
-
-          </div>
-        )}
-
-        {tab === 'management' && (
-          <div className="space-y-10">
-            {/* Real-time Triage */}
-            <div className="grid lg:grid-cols-4 gap-12">
-              <div className="lg:col-span-3">
-                <Card className="p-0 border-2 border-brand-navy/20 dark:border-white/10 bg-white dark:bg-white/5 overflow-hidden rounded-[3rem] shadow-premium">
-                  <div className="p-10 border-b-2 border-slate-200 dark:border-white/10 flex flex-wrap items-center justify-between gap-8 bg-slate-50/50 dark:bg-white/5">
-                    <div className="flex flex-wrap items-center gap-4 flex-1">
-                      <div className="relative flex-1 max-w-sm">
-                        <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-                        <input 
-                          value={deskSearch}
-                          onChange={(e) => setDeskSearch(e.target.value)}
-                          placeholder="Search ID, Title, Location..." 
-                          className="w-full bg-white dark:bg-dark-950 border-2 border-slate-200 dark:border-white/5 rounded-xl pl-12 pr-4 py-3 text-sm text-brand-navy dark:text-white focus:border-brand-indigo outline-none transition-all font-medium" 
-                        />
-                      </div>
-                      <select 
-                        value={deskStatus}
-                        onChange={(e) => setDeskStatus(e.target.value)}
-                        className="bg-white dark:bg-dark-950 border-2 border-slate-200 dark:border-white/5 rounded-xl px-6 py-3 text-xs font-black uppercase tracking-widest text-brand-navy dark:text-white outline-none cursor-pointer hover:border-brand-indigo transition-all"
-                      >
-                        <option value="all">Full Registry</option>
-                        <option value="new">Unassigned</option>
-                        <option value="in_progress">Operational</option>
-                        <option value="resolved">Completed</option>
-                      </select>
-                    </div>
-                    <div className="flex gap-3">
-                      <Badge className="bg-brand-indigo text-white border-none px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest">{scopedComplaints.filter(c => c.status === 'submitted').length} New Reports</Badge>
-                      <Badge className="bg-rose-500 text-white border-none px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest">{criticalAlerts.length} Priority</Badge>
-                    </div>
-                  </div>
-                  
-                  <div className="divide-y divide-slate-200 dark:divide-white/5">
-                    {filteredDeskComplaints.slice(0, 20).map((c) => (
-                      <div key={c.id} className="p-8 flex flex-col xl:flex-row xl:items-center gap-8 hover:bg-slate-50 dark:hover:bg-white/5 transition-all group relative overflow-hidden">
-                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-transparent group-hover:bg-brand-indigo transition-all" />
-                        
-                        <div className="flex items-center gap-6 flex-1 min-w-0">
-                          <div className="w-16 h-16 rounded-xl bg-slate-100 dark:bg-dark-950 flex items-center justify-center text-3xl group-hover:rotate-6 transition-transform shadow-inner border border-slate-200 dark:border-white/5">
-                            {CATEGORY_META[c.category]?.icon || '📋'}
-                          </div>
-                          
-                          <div className="flex-1 min-w-0">
-                            <div className="flex flex-wrap items-center gap-3 mb-2">
-                              <span className="text-[10px] font-black text-brand-indigo uppercase tracking-[0.2em]">{c.referenceId}</span>
-                              <Badge className={clsx(
-                                "text-[8px] font-black uppercase px-2 py-0.5 rounded",
-                                c.severity >= 7 ? "bg-rose-500/10 text-rose-500 border border-rose-500/20" : "bg-brand-indigo/10 text-brand-indigo border border-brand-indigo/20"
-                              )}>Level {c.severity}</Badge>
-                              
-                              {c.isCommunityReport && (
-                                <Badge className="bg-brand-navy text-white border-none text-[8px] font-black px-2 py-0.5 rounded shadow-sm">
-                                  SOCIETY: {c.societyName}
-                                </Badge>
-                              )}
-                            </div>
-                            
-                            <h4 className="text-xl font-black text-brand-navy dark:text-white truncate leading-tight mb-2">
-                              {c.title}
-                            </h4>
-                            
-                            <div className="flex flex-wrap items-center gap-6">
-                              <p className="text-xs text-slate-500 font-medium flex items-center gap-2">
-                                <MapPin size={14} className="text-slate-400" />
-                                {c.location.address}
-                              </p>
-                              <div className="flex items-center gap-4">
-                                <span className="flex items-center gap-2 text-[10px] font-black text-brand-navy dark:text-slate-300">
-                                  <TrendingUp size={12} /> {c.upvotes || 0} Votes
-                                </span>
-                                <span className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-white/10" />
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                                  {formatDistanceToNow(new Date(c.createdAt))} ago
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-10 xl:pl-10 xl:border-l border-slate-200 dark:border-white/5">
-                          <div className="hidden sm:block text-right">
-                            <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-1">Reporter</p>
-                            <p className="text-sm font-bold text-brand-navy dark:text-white">{c.citizenName}</p>
-                          </div>
-                          
-                          <div className="flex items-center gap-3">
-                            <Link to={`/complaints/track/${c.referenceId}`}>
-                              <Button variant="outline" size="lg" className="px-6 border-2 border-slate-200 dark:border-white/10 text-xs font-black uppercase tracking-widest hover:border-brand-indigo">Review</Button>
-                            </Link>
-                            
-                            {c.status === 'resolved' ? (
-                              <Button 
-                                size="lg" 
-                                onClick={() => updateComplaintStatus(c.id, 'verified', c.citizenId, c.referenceId, 'Verified and approved by Admin.')}
-                                className="bg-emerald-500 text-white shadow-lg shadow-emerald-500/20 px-6 text-xs font-black uppercase tracking-widest"
-                              >
-                                Approve Fix
-                              </Button>
-                            ) : c.status === 'submitted' || c.status === 'escalated' ? (
-                              <Button 
-                                size="lg" 
-                                onClick={() => setAssigningComplaint(c)}
-                                className="bg-brand-indigo text-white shadow-lg shadow-brand-indigo/20 px-6 text-xs font-black uppercase tracking-widest"
-                              >
-                                Deploy Personnel
-                              </Button>
-                            ) : (
-                              <div className="px-6 py-3 rounded-xl bg-slate-100 dark:bg-white/5 text-[10px] font-black text-slate-400 uppercase tracking-widest border border-slate-200 dark:border-white/5">
-                                {c.status.replace('_', ' ')}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                    {scopedComplaints.length === 0 && (
-                      <div className="p-20 text-center">
-                        <div className="w-16 h-16 rounded-full bg-slate-50 dark:bg-white/5 flex items-center justify-center mx-auto mb-4 text-2xl">📭</div>
-                        <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">No complaints found in the grid</p>
-                      </div>
-                    )}
-                  </div>
-                </Card>
-              </div>
-
-              <div className="space-y-6">
-                <Card className="p-6 bg-brand-rose/5 border-brand-rose/20">
-                  <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-4 uppercase tracking-widest flex items-center gap-2">
-                    <AlertTriangle size={16} className="text-brand-rose" /> Critical Alerts
-                  </h3>
-                  <div className="space-y-4">
-                    {criticalAlerts.slice(0, 3).map(c => (
-                      <div key={c.id} className="bg-slate-100 dark:bg-dark-950/50 p-4 rounded-2xl border border-brand-rose/10 group hover:border-brand-rose/30 transition-all">
-                        <div className="flex items-center justify-between mb-2">
-                          <Badge variant="error">{c.status === 'escalated' ? 'ESCALATED' : 'CRITICAL'}</Badge>
-                          <span className="text-[10px] text-slate-600">{formatDistanceToNow(new Date(c.updatedAt))} ago</span>
-                        </div>
-                        <p className="text-xs text-slate-900 dark:text-white font-bold">{c.referenceId}</p>
-                        <p className="text-[10px] text-slate-500 mt-1">{c.title}</p>
-                        <div className="mt-3 flex justify-end">
-                           <Link to={`/complaints/track/${c.referenceId}`} className="text-[10px] text-brand-rose font-bold uppercase hover:underline">Take Action →</Link>
-                        </div>
-                      </div>
-                    ))}
-                    {criticalAlerts.length === 0 && (
-                      <p className="text-[10px] text-slate-600 text-center py-4 italic">No critical alerts currently.</p>
-                    )}
-                  </div>
-                </Card>
-
-                <Card className="p-6">
-                  <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-6 uppercase tracking-widest">Global Personnel</h3>
-                  <div className="space-y-4">
-                    {officers.slice(0, 8).map(o => (
-                      <div key={o.id} className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <Avatar name={o.name} src={o.avatar} size="sm" />
-                          <div>
-                            <p className="text-xs font-bold text-slate-900 dark:text-white">{o.name}</p>
-                            <p className="text-[10px] text-slate-600">{(o as any).department || 'Administrative'}</p>
-                          </div>
-                        </div>
-                        <div className={clsx('w-2 h-2 rounded-full', (o as any).isOnline !== false ? 'bg-emerald-500' : 'bg-slate-700')} />
-                      </div>
-                    ))}
-                  </div>
-                  <Button variant="ghost" size="sm" className="w-full mt-6 text-primary-400" onClick={() => setTab('users')}>Manage Full Workforce</Button>
-                </Card>
-              </div>
-            </div>
-          </div>
-        )}
-        {tab === 'users' && (
-          <Card className="p-8">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-8">
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <Users size={20} className="text-primary-500" /> System Directory
-              </h3>
-              <div className="flex items-center gap-3">
-                <div className="relative">
-                  <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-600" />
-                  <input placeholder="Search users..." className="bg-slate-100 dark:bg-dark-950/50 border border-slate-200 dark:border-white/5 rounded-xl pl-10 pr-4 py-2 text-xs text-slate-900 dark:text-white focus:border-primary-500/50 outline-none w-64" />
-                </div>
-                <Button size="sm" onClick={() => setShowAddOfficerModal(true)}>Add User</Button>
-              </div>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full text-left">
-                <thead>
-                  <tr className="border-b border-slate-200 dark:border-white/5">
-                    <th className="pb-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">User</th>
-                    <th className="pb-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Role</th>
-                    <th className="pb-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Ward</th>
-                    <th className="pb-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Status</th>
-                    <th className="pb-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Activity</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/5">
-                  {officers.map((o) => (
-                    <tr key={o.id} className="hover:bg-slate-50 dark:bg-white/5 transition-all">
-                      <td className="py-4">
-                        <div className="flex items-center gap-3">
-                          <Avatar name={o.name} src={o.avatar} size="sm" />
-                          <div>
-                            <p className="text-sm font-bold text-slate-900 dark:text-white">{o.name}</p>
-                            <p className="text-[10px] text-slate-500">{o.email}</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="py-4">
-                        <Badge variant={o.role === 'admin' ? 'success' : 'info'}>{o.role.toUpperCase()}</Badge>
-                      </td>
-                      <td className="py-4 text-xs text-slate-400">{(o as any).wardName || 'City Wide'}</td>
-                      <td className="py-4">
-                        <div className="flex items-center gap-2">
-                          <div className={clsx('w-1.5 h-1.5 rounded-full', (o as any).isOnline !== false ? 'bg-emerald-500' : 'bg-slate-600')} />
-                          <span className="text-[10px] text-slate-900 dark:text-white font-medium uppercase">{(o as any).isOnline !== false ? 'Online' : 'Offline'}</span>
-                        </div>
-                      </td>
-                      <td className="py-4">
-                        <Button variant="ghost" size="sm" onClick={() => setManagingUser(o)}>Manage</Button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </Card>
-        )}
-      </div>
-      <>
-        {/* Assignment Modal */}
-        <AnimatePresence>
-          {assigningComplaint && (
-            <div className="fixed inset-0 z-[200] flex items-center justify-center p-6">
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                onClick={() => setAssigningComplaint(null)}
-                className="absolute inset-0 bg-slate-100 dark:bg-dark-950/80 backdrop-blur-sm" 
-              />
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                className="relative w-full max-w-md bg-slate-50 dark:bg-dark-900 border border-white/10 rounded-[2.5rem] shadow-2xl overflow-hidden"
+          <motion.div 
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="flex flex-col gap-4 items-end pointer-events-auto"
+          >
+             <button 
+                onClick={() => setShowNotification(!showNotification)}
+                className="w-14 h-14 rounded-[1.25rem] glass-premium border border-white/10 flex items-center justify-center text-white hover:bg-white/10 transition-all shadow-glow-lg relative panel-shine bg-[#020617]/40 backdrop-blur-3xl"
               >
-                <div className="p-8">
-                  <div className="flex items-center justify-between mb-8">
-                    <h3 className="text-xl font-black text-slate-900 dark:text-white font-display">Assign Task</h3>
-                    <button onClick={() => setAssigningComplaint(null)} className="text-slate-500 hover:text-slate-900 dark:text-white">
-                      <X size={24} />
-                    </button>
-                  </div>
-   
-                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/5 mb-8">
-                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Complaint</p>
-                    <p className="text-sm font-bold text-slate-900 dark:text-white">{assigningComplaint.title}</p>
-                    <p className="text-[10px] text-primary-400 mt-1 font-mono">{assigningComplaint.referenceId}</p>
-                  </div>
-   
-                  <div className="max-h-[400px] overflow-y-auto pr-2 space-y-8">
-                    {DEPARTMENTS.map(dept => {
-                      const deptWorkers = fieldOfficers.filter(o => o.department === dept);
-                      return (
-                        <div key={dept} className="space-y-3">
-                          <div className="flex items-center justify-between px-2">
-                            <h5 className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{dept}</h5>
-                            <span className="text-[10px] font-bold text-slate-400">{deptWorkers.length} Personnel</span>
-                          </div>
-                          <div className="space-y-2">
-                            {deptWorkers.map(worker => (
-                              <button
-                                key={worker.id}
-                                onClick={async () => {
-                                  await updateComplaintStatus(
-                                    assigningComplaint.id, 
-                                     'assigned', 
-                                     assigningComplaint.citizenId, 
-                                     assigningComplaint.referenceId,
-                                     `Task assigned to ${worker.name}`,
-                                     worker.id
-                                  );
-                                  setAssigningComplaint(null);
-                                }}
-                                className="w-full flex items-center justify-between p-4 rounded-2xl border border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-white/5 hover:bg-brand-indigo/10 hover:border-brand-indigo/30 transition-all group"
-                              >
-                                <div className="flex items-center gap-3">
-                                  <div className="w-10 h-10 rounded-xl bg-brand-indigo/10 flex items-center justify-center text-xl">
-                                    {worker.avatar || '👷'}
-                                  </div>
-                                  <div className="text-left">
-                                    <p className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-brand-indigo">{worker.name}</p>
-                                    <div className="flex items-center gap-2">
-                                      <div className={clsx("w-1.5 h-1.5 rounded-full", worker.isOnline !== false ? "bg-emerald-500" : "bg-slate-500")} />
-                                      <p className="text-[9px] text-slate-500 uppercase font-bold">{worker.isOnline !== false ? 'Available' : 'Offline'}</p>
-                                    </div>
-                                  </div>
-                                </div>
-                                <ChevronRight size={16} className="text-slate-300 group-hover:text-brand-indigo" />
-                              </button>
-                            ))}
-                            {deptWorkers.length === 0 && (
-                              <div className="p-4 rounded-2xl border border-dashed border-slate-200 dark:border-white/10 text-center">
-                                <p className="text-[10px] text-slate-500 italic">No personnel in this department</p>
-                                <button 
-                                  onClick={() => {
-                                    setNewOfficer({ ...newOfficer, department: dept });
-                                    setShowAddOfficerModal(true);
-                                    setAssigningComplaint(null);
-                                  }}
-                                  className="text-[10px] font-black text-brand-indigo uppercase mt-2 hover:underline"
-                                >
-                                  + Add Officer
-                                </button>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </motion.div>
-            </div>
-          )}
-        </AnimatePresence>
-        {/* User Management Modal */}
-        <AnimatePresence>
-          {managingUser && (
-            <div className="fixed inset-0 z-[110] flex items-center justify-center p-6">
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                onClick={() => setManagingUser(null)}
-                className="absolute inset-0 bg-slate-100 dark:bg-dark-950/80 backdrop-blur-sm"
-              />
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                className="relative w-full max-w-lg glass border border-white/10 rounded-[2.5rem] overflow-hidden p-8"
-              >
-                <div className="flex items-center gap-4 mb-8">
-                  <Avatar name={managingUser.name} src={managingUser.avatar} size="lg" />
-                  <div>
-                    <h3 className="text-2xl font-black text-slate-900 dark:text-white">{managingUser.name}</h3>
-                    <p className="text-slate-500 font-bold uppercase tracking-widest text-[10px]">{managingUser.email}</p>
-                  </div>
-                </div>
-
-                <div className="space-y-6">
-                  <div>
-                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 block">Personnel Role</label>
-                    <div className="grid grid-cols-2 gap-3">
-                      {['admin', 'citizen', 'officer', 'zonal_admin'].map(role => (
-                        <button 
-                          key={role}
-                          onClick={async () => {
-                            await updateDoc(doc(db, 'users', managingUser.id), { role });
-                            setManagingUser({ ...managingUser, role });
-                          }}
-                          className={clsx(
-                            'p-4 rounded-2xl border transition-all text-left group',
-                            managingUser.role === role ? 'bg-brand-indigo/20 border-brand-indigo/50' : 'bg-slate-50 dark:bg-white/5 border-white/10 hover:border-white/20'
-                          )}
-                        >
-                          <p className={clsx('text-xs font-black uppercase tracking-widest', managingUser.role === role ? 'text-brand-indigo' : 'text-slate-400')}>
-                            {role.replace('_', ' ')}
-                          </p>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {managingUser.role === 'officer' && (
-                    <div>
-                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 block">Assign Department</label>
-                      <select 
-                        value={managingUser.department || ''}
-                        onChange={async (e) => {
-                          await updateDoc(doc(db, 'users', managingUser.id), { department: e.target.value });
-                          setManagingUser({ ...managingUser, department: e.target.value });
-                        }}
-                        className="w-full bg-slate-50 dark:bg-white/5 border border-white/10 rounded-xl p-3 text-sm text-slate-900 dark:text-white outline-none focus:border-brand-indigo"
-                      >
-                        <option value="">Select Department</option>
-                        {DEPARTMENTS.map(d => <option key={d} value={d}>{d}</option>)}
-                      </select>
-                    </div>
-                  )}
-                  </div>
-
-                  <div>
-                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 block">Quick Actions</label>
-                    <div className="flex flex-wrap gap-2">
-                      <Button variant="outline" className="text-rose-500 border-rose-500/20 hover:bg-rose-500/10">Suspend Access</Button>
-                      <Button variant="outline">Reset Credentials</Button>
-                      <Button variant="outline" onClick={() => setManagingUser(null)}>Close</Button>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            </div>
-          )}
-        {/* Add Officer Modal */}
-        <AnimatePresence>
-          {showAddOfficerModal && (
-            <div className="fixed inset-0 z-[250] flex items-center justify-center p-6">
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                onClick={() => setShowAddOfficerModal(false)}
-                className="absolute inset-0 bg-slate-100 dark:bg-dark-950/80 backdrop-blur-sm" 
-              />
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                className="relative w-full max-w-md bg-slate-50 dark:bg-dark-900 border border-white/10 rounded-[2.5rem] shadow-2xl overflow-hidden p-8"
-              >
-                <div className="flex items-center justify-between mb-8">
-                  <h3 className="text-xl font-black text-slate-900 dark:text-white font-display">Add Field Personnel</h3>
-                  <button onClick={() => setShowAddOfficerModal(false)} className="text-slate-500 hover:text-slate-900 dark:text-white">
-                    <X size={24} />
-                  </button>
-                </div>
-
-                <div className="space-y-6">
-                  <div>
-                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 block">Full Name</label>
-                    <input 
-                      value={newOfficer.name}
-                      onChange={(e) => setNewOfficer({ ...newOfficer, name: e.target.value })}
-                      className="w-full bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl p-4 text-sm outline-none focus:border-brand-indigo" 
-                      placeholder="e.g. Ramesh Kumar"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 block">Email Address</label>
-                    <input 
-                      value={newOfficer.email}
-                      onChange={(e) => setNewOfficer({ ...newOfficer, email: e.target.value })}
-                      className="w-full bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl p-4 text-sm outline-none focus:border-brand-indigo" 
-                      placeholder="ramesh@civiceye.gov"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 block">Department</label>
-                    <select 
-                      value={newOfficer.department}
-                      onChange={(e) => setNewOfficer({ ...newOfficer, department: e.target.value })}
-                      className="w-full bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl p-4 text-sm outline-none focus:border-brand-indigo"
-                    >
-                      {DEPARTMENTS.map(d => <option key={d} value={d}>{d}</option>)}
-                    </select>
-                  </div>
-                  <Button 
-                    className="w-full py-4 rounded-2xl bg-brand-indigo text-white font-black uppercase tracking-widest shadow-lg shadow-brand-indigo/20"
-                    onClick={() => {
-                      // Logic to add officer to Firebase would go here
-                      setShowAddOfficerModal(false);
-                    }}
+                <Bell size={24} />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-2 -right-2 w-6 h-6 bg-rose-500 text-white text-[10px] font-black rounded-full flex items-center justify-center shadow-[0_0_15px_rgba(244,63,94,0.8)] border-2 border-[#020617]">
+                    {unreadCount}
+                  </span>
+                )}
+              </button>
+              
+              {/* Notifications Dropdown inside HUD */}
+              <AnimatePresence>
+                {showNotification && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9, y: -20 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.9, y: -20 }}
+                    className="w-80 glass-premium border border-white/10 rounded-[2rem] shadow-glow-lg overflow-hidden panel-shine bg-[#020617]/80 backdrop-blur-3xl"
                   >
-                    Register Personnel
-                  </Button>
+                     <div className="p-4 border-b border-white/5 flex items-center justify-between">
+                       <h3 className="text-[10px] font-black text-white uppercase tracking-[0.2em]">Alerts</h3>
+                       <button onClick={() => markAllAsRead()} className="text-[9px] font-black text-neon-cyan uppercase">Clear</button>
+                     </div>
+                     <div className="max-h-[300px] overflow-y-auto p-2">
+                        {notifications.map((n: any) => (
+                           <div key={n.id} className="p-3 rounded-xl hover:bg-white/5 mb-1 cursor-pointer transition-colors border-l-2 border-transparent hover:border-neon-cyan" onClick={() => { markAllAsRead(); setShowNotification(false); setTab('management'); setDeskSearch(n.referenceId); }}>
+                              <p className="text-xs font-bold text-white">{n.title}</p>
+                              <p className="text-[10px] text-slate-400 mt-1">{n.message}</p>
+                           </div>
+                        ))}
+                     </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+          </motion.div>
+        </div>
+
+        {/* Dynamic Center HUD Content based on Tab */}
+        <div className="flex-1 flex w-full relative mt-8 pointer-events-none">
+           <AnimatePresence mode="wait">
+             
+             {tab === 'analytics' && (
+                <motion.div key="analytics" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="w-full flex gap-6 h-full items-start">
+                   {/* Left Panel: KPIs */}
+                   <div className="w-80 flex flex-col gap-4 pointer-events-auto h-full overflow-y-auto custom-scrollbar pr-2">
+                     {[
+                        { label: 'Active', value: scopedComplaints.filter(c => !['resolved', 'closed'].includes(c.status)).length, icon: '🚨' },
+                        { label: 'Critical', value: criticalAlerts.length, icon: '⚠️', color: 'text-rose-500' },
+                        { label: 'Live Personnel', value: fieldOfficers.filter(o => o.isOnline !== false).length, icon: '👷' },
+                      ].map((s, i) => (
+                        <div key={s.label} className="glass-premium p-6 rounded-[2rem] border border-white/10 shadow-glow-lg panel-shine bg-[#020617]/40 backdrop-blur-3xl relative overflow-hidden group">
+                           <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 blur-2xl rounded-full z-0 opacity-0 group-hover:opacity-100 transition-opacity" />
+                           <div className="flex justify-between items-start relative z-10">
+                              <div>
+                                <p className={clsx("text-4xl font-black drop-shadow-md tracking-tighter leading-none mb-2", s.color || 'text-white')}>{s.value}</p>
+                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">{s.label}</p>
+                              </div>
+                              <span className="text-2xl drop-shadow-lg">{s.icon}</span>
+                           </div>
+                        </div>
+                      ))}
+                   </div>
+
+                   {/* Bottom Center Panel: Charts floating */}
+                   <div className="flex-1 flex flex-col justify-end h-full pointer-events-none pb-4">
+                      <div className="glass-premium p-6 rounded-[2.5rem] border border-white/10 shadow-glow-lg panel-shine bg-[#020617]/40 backdrop-blur-3xl pointer-events-auto h-72 flex gap-8">
+                         <div className="flex-1">
+                            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-white mb-4 drop-shadow-sm">Trend Velocity</h3>
+                            <ResponsiveContainer width="100%" height="100%">
+                              <AreaChart data={dynamicChartData}>
+                                <defs>
+                                  <linearGradient id="hudCount" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#06b6d4" stopOpacity={0.8}/><stop offset="95%" stopColor="#06b6d4" stopOpacity={0}/></linearGradient>
+                                </defs>
+                                <XAxis dataKey="name" stroke="#94a3b8" fontSize={10} tickLine={false} axisLine={false} />
+                                <Tooltip contentStyle={{ backgroundColor: 'rgba(2, 6, 23, 0.8)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '16px', backdropFilter: 'blur(12px)' }} itemStyle={{ color: '#06b6d4' }} />
+                                <Area type="monotone" dataKey="count" stroke="#06b6d4" strokeWidth={4} fillOpacity={1} fill="url(#hudCount)" />
+                              </AreaChart>
+                            </ResponsiveContainer>
+                         </div>
+                         <div className="w-1/3">
+                            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-white mb-4 drop-shadow-sm">Mix</h3>
+                            <ResponsiveContainer width="100%" height="100%">
+                              <PieChart>
+                                <Pie data={dynamicCategoryData} innerRadius={40} outerRadius={70} paddingAngle={5} dataKey="value" stroke="none">
+                                  {dynamicCategoryData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                                </Pie>
+                                <Tooltip contentStyle={{ backgroundColor: 'rgba(2, 6, 23, 0.8)', border: 'none', borderRadius: '12px' }} />
+                              </PieChart>
+                            </ResponsiveContainer>
+                         </div>
+                      </div>
+                   </div>
+                </motion.div>
+             )}
+
+             {tab === 'management' && (
+                <motion.div key="triage" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="w-full flex justify-end h-full pointer-events-none">
+                  {/* Right Panel: Triage Desk */}
+                  <div className="w-full max-w-xl h-full flex flex-col pointer-events-auto glass-premium rounded-[2.5rem] border border-white/10 shadow-glow-lg bg-[#020617]/60 backdrop-blur-3xl overflow-hidden panel-shine">
+                     <div className="p-6 border-b border-white/5 flex gap-4 bg-white/[0.02]">
+                        <input value={deskSearch} onChange={(e) => setDeskSearch(e.target.value)} placeholder="Filter ID/Title..." className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-xs text-white placeholder:text-slate-500 focus:border-neon-cyan outline-none transition-all shadow-inner-glow" />
+                        <select value={deskStatus} onChange={(e) => setDeskStatus(e.target.value)} className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-[10px] font-black uppercase tracking-widest text-white outline-none cursor-pointer">
+                          <option value="all" className="bg-[#020617]">All</option>
+                          <option value="new" className="bg-[#020617]">New</option>
+                          <option value="in_progress" className="bg-[#020617]">Live</option>
+                        </select>
+                     </div>
+                     <div className="flex-1 overflow-y-auto custom-scrollbar p-2">
+                        {filteredDeskComplaints.map(c => (
+                           <div key={c.id} className="p-5 rounded-2xl border border-transparent hover:bg-white/5 hover:border-white/10 transition-all mb-2 cursor-pointer group flex gap-4">
+                              <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-xl shadow-inner-glow">{CATEGORY_META[c.category]?.icon || '📋'}</div>
+                              <div className="flex-1">
+                                <div className="flex justify-between items-start mb-1">
+                                  <p className="text-[9px] font-black text-brand-indigo uppercase tracking-[0.2em]">{c.referenceId}</p>
+                                  <Badge className="text-[8px]">{c.status.replace('_', ' ')}</Badge>
+                                </div>
+                                <h4 className="text-sm font-black text-white leading-tight mb-2 group-hover:text-neon-cyan transition-colors">{c.title}</h4>
+                                <div className="flex gap-2">
+                                  <Link to={`/complaints/track/${c.referenceId}`} className="text-[9px] font-black uppercase text-slate-400 hover:text-white px-3 py-1.5 rounded-lg border border-white/10 hover:bg-white/10">Review</Link>
+                                  {(c.status === 'submitted' || c.status === 'escalated') && (
+                                    <button onClick={() => setAssigningComplaint(c)} className="text-[9px] font-black uppercase text-neon-cyan px-3 py-1.5 rounded-lg border border-neon-cyan/30 hover:bg-neon-cyan/20 shadow-[0_0_10px_rgba(6,182,212,0.2)]">Deploy</button>
+                                  )}
+                                </div>
+                              </div>
+                           </div>
+                        ))}
+                     </div>
+                  </div>
+                </motion.div>
+             )}
+
+             {tab === 'users' && (
+                <motion.div key="users" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="w-full flex justify-center items-center h-full pointer-events-none">
+                  {/* Center Panel: Personnel */}
+                  <div className="w-full max-w-4xl h-[80%] pointer-events-auto glass-premium rounded-[2.5rem] border border-white/10 shadow-glow-lg bg-[#020617]/60 backdrop-blur-3xl overflow-hidden panel-shine flex flex-col">
+                     <div className="p-8 border-b border-white/5 flex justify-between items-center bg-white/[0.02]">
+                        <h3 className="text-xl font-black text-white flex items-center gap-3"><Users size={20} className="text-neon-cyan" /> Personnel Grid</h3>
+                        <Button size="sm" glow onClick={() => setShowAddOfficerModal(true)}>+ Recruit</Button>
+                     </div>
+                     <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+                           {officers.map(o => (
+                              <div key={o.id} className="p-5 rounded-[1.5rem] bg-white/5 border border-white/10 shadow-inner-glow hover:border-brand-indigo/50 hover:-translate-y-1 transition-all group cursor-pointer" onClick={() => setManagingUser(o)}>
+                                 <div className="flex gap-4 items-center">
+                                    <Avatar name={o.name} src={o.avatar} size="md" className="ring-2 ring-white/10 group-hover:ring-neon-cyan/50" />
+                                    <div>
+                                       <p className="text-sm font-bold text-white truncate">{o.name}</p>
+                                       <Badge variant={o.role === 'admin' ? 'success' : 'info'} className="text-[8px] mt-1">{o.role}</Badge>
+                                    </div>
+                                 </div>
+                              </div>
+                           ))}
+                        </div>
+                     </div>
+                  </div>
+                </motion.div>
+             )}
+
+           </AnimatePresence>
+        </div>
+
+      </div>
+      
+      {/* Modals are kept outside the grid but use pointer-events-auto */}
+      <AnimatePresence>
+        {assigningComplaint && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 pointer-events-auto">
+             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setAssigningComplaint(null)} className="absolute inset-0 bg-[#020617]/80 backdrop-blur-xl" />
+             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="relative w-full max-w-md glass-premium border border-white/10 rounded-[2.5rem] shadow-glow-lg overflow-hidden panel-shine p-8 bg-[#020617]/90">
+                <div className="flex items-center justify-between mb-8">
+                  <h3 className="text-xl font-black text-white flex items-center gap-3">Deploy Agent</h3>
+                  <button onClick={() => setAssigningComplaint(null)} className="p-2 rounded-full bg-white/5 text-slate-400 hover:text-white"><X size={20} /></button>
                 </div>
-              </motion.div>
-            </div>
-          )}
-        </AnimatePresence>
-      </>
+                <div className="max-h-[400px] overflow-y-auto space-y-4 pr-2 custom-scrollbar">
+                  {fieldOfficers.map(worker => (
+                    <button key={worker.id} onClick={() => { updateComplaintStatus(assigningComplaint.id, 'assigned', assigningComplaint.citizenId, assigningComplaint.referenceId, `Task assigned`, worker.id); setAssigningComplaint(null); }} className="w-full flex items-center justify-between p-4 rounded-[1.25rem] border border-white/10 bg-white/5 hover:bg-brand-indigo/20 transition-all text-left group">
+                       <div>
+                          <p className="text-sm font-bold text-white group-hover:text-neon-cyan">{worker.name}</p>
+                          <p className="text-[10px] text-slate-400 uppercase font-black">{worker.department}</p>
+                       </div>
+                       <ChevronRight size={18} className="text-slate-500 group-hover:text-neon-cyan" />
+                    </button>
+                  ))}
+                </div>
+             </motion.div>
+          </div>
+        )}
+
+        {managingUser && (
+           <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 pointer-events-auto">
+             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setManagingUser(null)} className="absolute inset-0 bg-[#020617]/80 backdrop-blur-xl" />
+             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="relative w-full max-w-md glass-premium border border-white/10 rounded-[2.5rem] shadow-glow-lg overflow-hidden panel-shine p-8 bg-[#020617]/90">
+                <div className="flex items-center justify-between mb-8">
+                  <h3 className="text-xl font-black text-white">Clearance Control</h3>
+                  <button onClick={() => setManagingUser(null)} className="p-2 rounded-full bg-white/5 text-slate-400"><X size={20} /></button>
+                </div>
+                <div className="space-y-4">
+                   <p className="text-sm font-bold text-white">{managingUser.name}</p>
+                   <div className="grid grid-cols-2 gap-4">
+                     {['admin', 'citizen', 'officer', 'zonal_admin'].map(role => (
+                       <button key={role} onClick={() => { updateDoc(doc(db, 'users', managingUser.id), { role }); setManagingUser({ ...managingUser, role }); }} className={clsx('p-4 rounded-[1.25rem] border transition-all text-left text-[10px] font-black uppercase tracking-[0.2em]', managingUser.role === role ? 'bg-brand-indigo/20 border-neon-cyan text-neon-cyan shadow-glow-blue' : 'bg-white/5 border-white/10 text-slate-400')}>
+                         {role.replace('_', ' ')}
+                       </button>
+                     ))}
+                   </div>
+                </div>
+             </motion.div>
+           </div>
+        )}
+
+        {showAddOfficerModal && (
+           <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 pointer-events-auto">
+             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowAddOfficerModal(false)} className="absolute inset-0 bg-[#020617]/80 backdrop-blur-xl" />
+             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="relative w-full max-w-md glass-premium border border-white/10 rounded-[2.5rem] shadow-glow-lg overflow-hidden panel-shine p-8 bg-[#020617]/90">
+                <div className="flex items-center justify-between mb-8">
+                  <h3 className="text-xl font-black text-white">Recruit Agent</h3>
+                  <button onClick={() => setShowAddOfficerModal(false)} className="p-2 rounded-full bg-white/5 text-slate-400"><X size={20} /></button>
+                </div>
+                <div className="space-y-4">
+                  <input value={newOfficer.name} onChange={(e) => setNewOfficer({ ...newOfficer, name: e.target.value })} className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-sm text-white outline-none" placeholder="Agent Name" />
+                  <input value={newOfficer.email} onChange={(e) => setNewOfficer({ ...newOfficer, email: e.target.value })} className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-sm text-white outline-none" placeholder="Email ID" />
+                  <Button glow size="xl" className="w-full mt-4" onClick={() => setShowAddOfficerModal(false)}>Deploy</Button>
+                </div>
+             </motion.div>
+           </div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

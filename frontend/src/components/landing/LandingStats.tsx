@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react'
 import { motion, useInView } from 'framer-motion'
-import { StatCard } from '../ui'
 
 function Counter({ end, duration = 2 }: { end: number; duration?: number }) {
   const [count, setCount] = useState(0)
@@ -29,14 +28,15 @@ function Counter({ end, duration = 2 }: { end: number; duration?: number }) {
 
 export function LandingStats() {
   return (
-    <section className="py-20 px-4 bg-dark-900/50">
-      <div className="max-w-7xl mx-auto">
+    <section className="relative overflow-hidden px-4 py-24 z-10">
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-brand-indigo/5 to-transparent" />
+      <div className="max-w-7xl mx-auto relative z-10">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
           {[
-            { label: 'Complaints Filed', value: 12842, icon: '📋', trend: 12, color: 'from-blue-500/10 to-cyan-500/10' },
-            { label: 'Issues Resolved', value: 10250, icon: '✅', trend: 8, color: 'from-green-500/10 to-emerald-500/10' },
-            { label: 'Active Officers', value: 142, icon: '👮', trend: 3, color: 'from-amber-500/10 to-orange-500/10' },
-            { label: 'Avg Resolution Time', value: 48, icon: '⏱️', suffix: ' hrs', color: 'from-violet-500/10 to-purple-500/10' },
+            { label: 'Complaints Filed', value: 12842, icon: '📋', trend: 12, color: 'from-brand-indigo/20 to-transparent border-brand-indigo/30 hover:shadow-glow-blue hover:border-brand-indigo/50' },
+            { label: 'Issues Resolved', value: 10250, icon: '✅', trend: 8, color: 'from-emerald-500/20 to-transparent border-emerald-500/30 hover:shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:border-emerald-500/50' },
+            { label: 'Active Officers', value: 142, icon: '👮', trend: 3, color: 'from-neon-cyan/20 to-transparent border-neon-cyan/30 hover:shadow-glow-blue hover:border-neon-cyan/50' },
+            { label: 'Avg Resolution Time', value: 48, icon: '⏱️', suffix: ' hrs', color: 'from-violet-500/20 to-transparent border-violet-500/30 hover:shadow-[0_0_20px_rgba(139,92,246,0.3)] hover:border-violet-500/50' },
           ].map((stat, i) => (
             <motion.div
               key={stat.label}
@@ -45,24 +45,28 @@ export function LandingStats() {
               viewport={{ once: true }}
               transition={{ delay: i * 0.1 }}
             >
-              <div className={`glass p-8 rounded-[2.5rem] border border-white/5 relative overflow-hidden bg-gradient-to-br ${stat.color}`}>
-                <div className="text-4xl mb-4">{stat.icon}</div>
-                <div className="flex items-end gap-2">
-                  <h3 className="text-4xl font-black text-white font-display">
+              <motion.div
+                whileHover={{ y: -8 }}
+                className={`glass-premium panel-shine relative overflow-hidden rounded-[2rem] border p-8 bg-gradient-to-br ${stat.color} transition-all duration-500 group`}
+              >
+                <div className="absolute inset-0 bg-noise opacity-[0.05] mix-blend-overlay pointer-events-none" />
+                <div className="text-4xl mb-6 group-hover:scale-110 transition-transform origin-left drop-shadow-md">{stat.icon}</div>
+                <div className="flex items-end gap-3 relative z-10">
+                  <h3 className="text-4xl font-black text-white font-display drop-shadow-sm">
                     <Counter end={stat.value} />
                     {stat.suffix}
                   </h3>
                   {stat.trend && (
-                    <span className="text-xs font-bold text-emerald-400 mb-1.5 flex items-center gap-0.5">
+                    <span className="text-[10px] font-black text-emerald-400 mb-2 flex items-center gap-1 bg-emerald-500/10 px-2 py-1 rounded-full border border-emerald-500/20 shadow-[0_0_8px_rgba(16,185,129,0.2)]">
                       ↑{stat.trend}%
                     </span>
                   )}
                 </div>
-                <p className="text-xs text-slate-500 uppercase tracking-widest mt-2 font-bold">{stat.label}</p>
+                <p className="text-[10px] text-slate-300 uppercase tracking-[0.2em] mt-3 font-black relative z-10">{stat.label}</p>
                 
                 {/* Decorative Elements */}
-                <div className="absolute -right-8 -bottom-8 w-24 h-24 bg-white/5 rounded-full blur-2xl" />
-              </div>
+                <div className="absolute -right-8 -bottom-8 w-32 h-32 bg-white/5 rounded-full blur-2xl group-hover:bg-white/10 transition-colors" />
+              </motion.div>
             </motion.div>
           ))}
         </div>

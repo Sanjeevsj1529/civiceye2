@@ -4,21 +4,19 @@ import { doc, updateDoc } from 'firebase/firestore'
 import { db } from '../../firebase'
 import { 
   ClipboardList, CheckCircle2, Clock, MapPin, 
-  ChevronRight, Phone, MessageSquare, AlertTriangle,
-  TrendingUp, Award, Layout, Navigation, Camera,
-  MoreVertical, Filter, Search, Send, Check, User, Map as MapIcon
+  ChevronRight, AlertTriangle, Navigation,
+  TrendingUp, Award, Check, User, Map as MapIcon, Radio, Activity, Zap
 } from 'lucide-react'
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
-import { Card, StatCard, Badge, Button, Avatar, ProgressBar } from '../../components/ui'
+import { Card, Badge, Button, Avatar, ProgressBar } from '../../components/ui'
 import { STATUS_META, CATEGORY_META } from '../../utils/mockData'
 import { clsx } from 'clsx'
 import { useAuthStore } from '../../store/authStore'
 import { useComplaintStore } from '../../store/complaintStore'
 import { Link } from 'react-router-dom'
-import { FloatingOrbs } from '../../components/cinematic'
-import { format } from 'date-fns'
+import { formatDistanceToNow } from 'date-fns'
 
 // Fix for default marker icons
 const DefaultIcon = L.icon({
@@ -30,285 +28,310 @@ const DefaultIcon = L.icon({
 L.Marker.prototype.options.icon = DefaultIcon
 
 function MapController({ center }: { center: [number, number] }) {
-  const map = useMap();
+  const map = useMap()
   useEffect(() => {
-    if (center) {
-      map.flyTo(center, 15, { duration: 1.5 });
-    }
-  }, [center, map]);
-  return null;
+    if (center) map.flyTo(center, 14, { duration: 1.5 })
+  }, [center, map])
+  return null
 }
 
 export default function OfficerDashboard() {
   const { user } = useAuthStore()
   const { complaints, initializeComplaints, isLoading, updateComplaintStatus } = useComplaintStore()
-  const [view, setView] = useState<'tasks' | 'map' | 'performance'>('tasks')
+  const [activeTask, setActiveTask] = useState<string | null>(null)
+  const [mapCenter, setMapCenter] = useState<[number, number]>([28.6139, 77.2090])
 
   useEffect(() => {
-    const unsubscribe = initializeComplaints();
-    
-    // Set online status
+    const unsubscribe = initializeComplaints()
     if (user?.id) {
-      updateDoc(doc(db, 'users', user.id), { isOnline: true });
+      updateDoc(doc(db, 'users', user.id), { isOnline: true })
     }
-
     return () => {
-      if (typeof unsubscribe === 'function') unsubscribe();
+      if (typeof unsubscribe === 'function') unsubscribe()
       if (user?.id) {
-        updateDoc(doc(db, 'users', user.id), { isOnline: false });
+        updateDoc(doc(db, 'users', user.id), { isOnline: false })
       }
-    };
-  }, [initializeComplaints, user?.id]);
+    }
+  }, [initializeComplaints, user?.id])
 
-  const myTasks = complaints.filter(c => 
-    c.assignedOfficerId === user?.id || 
-    (c.status === 'assigned' && !c.assignedOfficerId) // Fallback for demo
+  const myTasks = complaints.filter(c =>
+    c.assignedOfficerId === user?.id ||
+    (c.status === 'assigned' && !c.assignedOfficerId)
   )
 
-  const resolvedCount = complaints.filter(c => 
-    (c.assignedOfficerId === user?.id) && 
+  const resolvedCount = complaints.filter(c =>
+    (c.assignedOfficerId === user?.id) &&
     ['resolved', 'verified', 'closed'].includes(c.status)
   ).length
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-slate-100 dark:bg-dark-950 pt-24 pb-20 px-6 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-slate-400 font-bold uppercase tracking-widest animate-pulse">Establishing Field Connection...</p>
-        </div>
-      </div>
-    );
-  }
+  const activeTaskData = activeTask ? myTasks.find(t => t.id === activeTask) : null
 
   return (
-    <div className="relative min-h-screen overflow-hidden pb-20 pt-24 px-6">
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-emerald-500/[0.06] via-transparent to-transparent dark:from-emerald-500/10" />
-      <FloatingOrbs className="opacity-70" />
-      <div className="relative z-[1] max-w-[1800px] mx-auto">
-        {/* Header */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-10">
-          <div className="flex items-center gap-6">
-            <Avatar name={user?.name || "Ramesh Kumar"} size="lg" className="w-20 h-20 bg-brand-violet shadow-glow-violet border-4 border-slate-200 dark:border-white/5" />
-            <div>
-              <div className="flex items-center gap-3">
-                <h1 className="text-3xl font-black text-slate-900 dark:text-white font-display">Duty Desk: {(user?.name || 'Officer').split(' ')[0]}</h1>
-                <Badge variant="success" className="ring-4 ring-emerald-500/10">On Duty</Badge>
+    <div className="fixed inset-0 overflow-hidden bg-[#020617]">
+      {/* 1. Fullscreen Map */}
+      <div className="absolute inset-0 z-0">
+        <MapContainer
+          center={mapCenter}
+          zoom={13}
+          className="h-full w-full"
+          zoomControl={false}
+        >
+          <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" />
+          {myTasks.map(task => (
+            <Marker
+              key={task.id}
+              position={[task.location.lat, task.location.lng]}
+              eventHandlers={{ click: () => { setActiveTask(task.id); setMapCenter([task.location.lat, task.location.lng]) } }}
+            >
+              <Popup className="custom-cinematic-popup">
+                <div className="p-3 min-w-[200px]">
+                  <p className="text-[10px] font-black text-neon-cyan uppercase tracking-widest mb-1">{task.referenceId}</p>
+                  <p className="text-sm font-bold text-white leading-tight mb-3">{task.title}</p>
+                  <div className="flex flex-col gap-2">
+                    <Link to={`/complaints/track/${task.referenceId}`}>
+                      <Button size="sm" glow className="w-full bg-brand-indigo border-none text-[10px] tracking-widest">VIEW TASK</Button>
+                    </Link>
+                    <Button
+                      size="sm" variant="outline"
+                      className="w-full text-[10px] border-white/20 tracking-widest hover:bg-white/5"
+                      onClick={() => window.open(`https://www.google.com/maps?q=${task.location.lat},${task.location.lng}`, '_blank')}
+                    >
+                      🧭 MAPS ROUTE
+                    </Button>
+                  </div>
+                </div>
+              </Popup>
+            </Marker>
+          ))}
+          <MapController center={mapCenter} />
+        </MapContainer>
+
+        {/* Map overlay gradients */}
+        <div className="absolute inset-0 bg-gradient-to-t from-[#020617] via-transparent to-[#020617]/50 pointer-events-none z-10" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#020617]/70 via-transparent to-[#020617]/70 pointer-events-none z-10" />
+      </div>
+
+      {/* 2. HUD Layer */}
+      <div className="absolute inset-0 z-20 pointer-events-none flex p-6 pt-24 pb-28 lg:p-8 lg:pt-24 lg:pb-32 gap-8">
+
+        {/* LEFT: Officer Profile + Stats */}
+        <motion.div
+          initial={{ opacity: 0, x: -30 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="w-80 flex flex-col gap-5 pointer-events-auto"
+        >
+          {/* Identity Card */}
+          <div className="glass-premium p-6 rounded-[2rem] border border-white/10 shadow-glow-lg panel-shine bg-[#020617]/60 backdrop-blur-3xl relative overflow-hidden">
+            <div className="absolute -top-10 -right-10 w-32 h-32 bg-brand-indigo/20 blur-3xl rounded-full" />
+            <div className="flex items-center gap-4 mb-5 relative z-10">
+              <div className="relative">
+                <Avatar name={user?.name || 'Officer'} size="lg" className="ring-4 ring-brand-indigo/30 shadow-glow-blue" />
+                <span className="absolute bottom-0 right-0 w-4 h-4 bg-emerald-400 rounded-full border-2 border-[#020617] shadow-glow-emerald animate-pulse" />
               </div>
-              <p className="text-slate-600 dark:text-slate-500 font-bold tracking-tight mt-1">
-                <span className="text-primary-600 dark:text-primary-400">{user?.wardName || 'North Ward'}</span> · {user?.department || 'Roads & Infrastructure'}
-              </p>
+              <div>
+                <p className="text-[9px] font-black text-neon-cyan uppercase tracking-[0.25em]">Field Officer · On Duty</p>
+                <h2 className="text-xl font-black text-white">{(user?.name || 'Officer').split(' ')[0]}</h2>
+                <p className="text-[10px] text-slate-400 font-bold">{user?.wardName || 'North Ward'}</p>
+              </div>
             </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1 p-1 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/5 rounded-xl mr-4">
-               <button 
-                onClick={() => setView('tasks')}
-                className={clsx('p-2 rounded-lg transition-all', view === 'tasks' ? 'bg-primary-500 text-slate-900 dark:text-white' : 'text-slate-500 hover:text-slate-900 dark:text-white')}
-              >
-                <ClipboardList size={18} />
-              </button>
-              <button 
-                onClick={() => setView('map')}
-                className={clsx('p-2 rounded-lg transition-all', view === 'map' ? 'bg-primary-500 text-slate-900 dark:text-white' : 'text-slate-500 hover:text-slate-900 dark:text-white')}
-              >
-                <MapIcon size={18} />
-              </button>
+
+            <div className="grid grid-cols-3 gap-3 relative z-10">
+              <div className="bg-white/5 border border-white/10 rounded-2xl p-3 text-center shadow-inner-glow">
+                <p className="text-2xl font-black text-white">{myTasks.length}</p>
+                <p className="text-[8px] font-black uppercase text-slate-400 tracking-widest mt-1">Tasks</p>
+              </div>
+              <div className="bg-white/5 border border-white/10 rounded-2xl p-3 text-center shadow-inner-glow">
+                <p className="text-2xl font-black text-emerald-400">{resolvedCount}</p>
+                <p className="text-[8px] font-black uppercase text-slate-400 tracking-widest mt-1">Done</p>
+              </div>
+              <div className="bg-white/5 border border-white/10 rounded-2xl p-3 text-center shadow-inner-glow">
+                <p className="text-2xl font-black text-amber-400">4.8</p>
+                <p className="text-[8px] font-black uppercase text-slate-400 tracking-widest mt-1">Score</p>
+              </div>
             </div>
-            <Button variant="outline" size="sm" className="hidden sm:flex">
-              <Navigation size={16} className="mr-2" /> Start Shift
-            </Button>
-            <Button size="sm" glow className="bg-emerald-500 hover:bg-emerald-600 shadow-glow-emerald border-none">
+
+            <Button glow className="w-full mt-5 bg-emerald-500 hover:bg-emerald-400 border-none shadow-glow-emerald text-white font-black uppercase tracking-widest text-[10px] relative z-10">
               <Check size={16} className="mr-2" /> Mark Available
             </Button>
           </div>
-        </div>
 
-        {/* Stats Section */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-          <StatCard label="Assigned Tasks" value={myTasks.length.toString()} icon="📋" trend={2} />
-          <StatCard label="Resolved" value={resolvedCount.toString()} icon="✅" trend={15} color="from-emerald-500/15 to-green-500/10 ring-1 ring-emerald-500/15 shadow-glow-emerald" />
-          <StatCard label="SLA Compliance" value="96%" icon="⏱️" trend={4} color="from-blue-500/15 to-cyan-500/10 ring-1 ring-neon-cyan/20 shadow-glow-blue" />
-          <StatCard label="Performance Score" value="4.8" icon="⭐" trend={1} color="from-amber-500/15 to-yellow-500/10 ring-1 ring-amber-400/20" />
-        </div>
-
-        <div className="grid lg:grid-cols-3 gap-8">
-          {/* Tasks Column */}
-          <div className="lg:col-span-2 space-y-6">
-            <AnimatePresence mode="wait">
-              {view === 'tasks' ? (
-                <motion.div key="tasks" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-6">
-                  <div className="flex items-center justify-between mb-2 px-2">
-                    <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
-                      <ClipboardList size={16} className="text-primary-500" /> Priority Queue
-                    </h3>
-                    <div className="flex items-center gap-4">
-                      <button className="text-xs text-slate-500 hover:text-slate-900 dark:text-white font-bold transition-colors">SORT BY SLA</button>
-                      <div className="w-px h-3 bg-white/10" />
-                      <button className="text-xs text-slate-500 hover:text-slate-900 dark:text-white font-bold transition-colors">VIEW ALL</button>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    {myTasks.map((task, i) => (
-                      <motion.div 
-                        key={task.id}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: i * 0.1 }}
-                      >
-                        <Card className="p-6 border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-white/5 hover:border-primary-500/30 transition-all group">
-                          <div className="flex flex-col sm:flex-row sm:items-center gap-6">
-                            <div className="w-16 h-16 rounded-2xl bg-slate-50 dark:bg-white/5 flex items-center justify-center text-4xl group-hover:scale-110 transition-transform">
-                              {CATEGORY_META[task.category].icon}
-                            </div>
-                            
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-3 mb-2">
-                                  <span className="text-[10px] font-mono text-slate-600 font-bold uppercase tracking-widest">{task.referenceId}</span>
-                                  <Badge variant={task.severity >= 7 ? 'error' : 'info'}>Sev {task.severity}</Badge>
-                                  {task.isCommunityReport && (
-                                    <Badge variant="warning" className="bg-brand-rose/10 text-brand-rose border border-brand-rose/20 animate-pulse-glow flex items-center gap-1.5">
-                                      🏘️ SOCIETY
-                                      <span className="w-1 h-1 rounded-full bg-brand-rose/40" />
-                                      <span className="font-black">{Math.floor(Math.random() * 6) + 2} Reports</span>
-                                    </Badge>
-                                  )}
-                                  <Badge variant="default" className="bg-brand-rose/10 text-brand-rose border border-brand-rose/20">
-                                    Due in 4h
-                                  </Badge>
-                                </div>
-                                <h4 className="text-lg font-bold text-slate-900 dark:text-white truncate group-hover:text-primary-400 transition-colors flex items-center gap-2">
-                                  {task.title}
-                                  {task.isCommunityReport && <span className="text-[10px] bg-slate-50 dark:bg-white/5 px-2 py-0.5 rounded-full text-slate-500 font-medium font-sans">Multi-Citizen Issue</span>}
-                                </h4>
-                                <div className="flex items-center gap-4 mt-2">
-                                  <p className="text-xs text-slate-500 flex items-center gap-1.5"><MapPin size={12} /> {task.location.address}</p>
-                                  <p className="text-xs text-slate-500 flex items-center gap-1.5"><User size={12} /> {task.isCommunityReport ? 'Community Verified' : task.citizenName}</p>
-                                </div>
-                              </div>
-
-                            <div className="flex items-center gap-3 pt-4 sm:pt-0 border-t sm:border-t-0 sm:border-l border-slate-200 dark:border-white/5 sm:pl-6">
-                              <Link to={`/complaints/track/${task.referenceId}`}>
-                                <Button size="sm" variant="outline">Navigate</Button>
-                              </Link>
-                              <Button size="sm" className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20" onClick={() => updateComplaintStatus(task.id, 'resolved', task.citizenId, task.referenceId, 'Resolved by field officer', user?.id || '')}>
-                                Complete
-                              </Button>
-                            </div>
-                          </div>
-                        </Card>
-                      </motion.div>
-                    ))}
-                    {myTasks.length === 0 && (
-                      <div className="py-20 text-center">
-                        <div className="text-6xl mb-4">🎉</div>
-                        <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">No assigned tasks</h3>
-                        <p className="text-slate-500">You're all caught up for now.</p>
-                      </div>
-                    )}
-                  </div>
-                </motion.div>
-              ) : (
-                <motion.div key="map" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="h-[600px] rounded-[2rem] border border-slate-200 dark:border-white/5 overflow-hidden relative">
-                   <MapContainer 
-                      center={[28.6139, 77.2090]} 
-                      zoom={12} 
-                      className="h-full w-full"
-                      zoomControl={false}
-                    >
-                      <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                      {myTasks.map(task => (
-                        <Marker key={task.id} position={[task.location.lat, task.location.lng]}>
-                          <Popup className="custom-popup">
-                            <div className="p-3 w-48">
-                              <p className="text-xs font-black text-slate-900 mb-1">{task.title}</p>
-                              <p className="text-[10px] text-slate-500 mb-3 truncate">{task.location.address}</p>
-                              <div className="flex flex-col gap-2">
-                                <Link to={`/complaints/track/${task.referenceId}`}>
-                                  <Button size="sm" className="w-full">View Task</Button>
-                                </Link>
-                                <Button 
-                                  size="sm" 
-                                  variant="outline" 
-                                  className="w-full text-[10px]"
-                                  onClick={() => window.open(`https://www.google.com/maps?q=${task.location.lat},${task.location.lng}`, '_blank')}
-                                >
-                                  🧭 Google Maps
-                                </Button>
-                              </div>
-                            </div>
-                          </Popup>
-                        </Marker>
-                      ))}
-                      <MapController center={[28.6139, 77.2090]} />
-                    </MapContainer>
-                    <div className="absolute top-6 left-6 z-[1000] glass px-4 py-2 rounded-xl border border-white/10">
-                      <p className="text-[10px] text-slate-900 dark:text-white font-bold uppercase tracking-widest">{myTasks.length} Assigned Locations</p>
-                    </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+          {/* Broadcast Card */}
+          <div className="glass-premium p-6 rounded-[2rem] border border-brand-indigo/30 shadow-glow-blue panel-shine bg-[#020617]/60 backdrop-blur-3xl relative overflow-hidden">
+            <div className="absolute -top-8 -right-8 w-28 h-28 bg-neon-cyan/15 blur-2xl rounded-full" />
+            <h4 className="text-[10px] font-black text-neon-cyan uppercase tracking-[0.2em] flex items-center gap-2 mb-4 relative z-10">
+              <Radio size={14} className="animate-pulse" /> Broadcast
+            </h4>
+            <p className="text-sm text-slate-300 italic leading-relaxed relative z-10">
+              "Heavy rainfall expected tonight. All officers on standby for drainage complaints."
+            </p>
+            <p className="text-[9px] text-neon-cyan font-black uppercase tracking-widest mt-4 relative z-10">— Command Center</p>
           </div>
 
-          {/* Performance Sidebar */}
-          <div className="space-y-8">
-            <Card className="p-8 border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-white/5 text-center">
-              <div className="w-20 h-20 rounded-[2.5rem] bg-brand-violet/10 flex items-center justify-center text-4xl mx-auto mb-6 shadow-glow-violet border border-brand-violet/10">
-                🚀
-              </div>
-              <h3 className="text-xl font-black text-slate-900 dark:text-white mb-2">Efficiency Rating</h3>
-              <p className="text-sm text-slate-500 mb-8">You are in the top 5% of officers this month!</p>
-              <div className="space-y-6">
-                <div className="space-y-2">
-                  <div className="flex justify-between text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                    <span>Resolution Speed</span>
-                    <span className="text-slate-900 dark:text-white">92%</span>
+          {/* Performance */}
+          <div className="glass-premium p-6 rounded-[2rem] border border-white/10 panel-shine bg-[#020617]/60 backdrop-blur-3xl flex-1 relative overflow-hidden">
+            <h3 className="text-[10px] font-black text-white uppercase tracking-[0.2em] flex items-center gap-2 mb-5">
+              <Activity size={14} className="text-brand-indigo" /> Performance
+            </h3>
+            <div className="space-y-5">
+              {[
+                { label: 'Resolution Speed', value: 92, color: 'bg-gradient-to-r from-brand-violet to-[#c084fc]' },
+                { label: 'SLA Compliance', value: 96, color: 'bg-gradient-to-r from-neon-cyan to-blue-400' },
+                { label: 'Citizen Rating', value: 96, color: 'bg-gradient-to-r from-emerald-500 to-emerald-400' },
+              ].map(m => (
+                <div key={m.label} className="space-y-2">
+                  <div className="flex justify-between text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                    <span>{m.label}</span>
+                    <span className="text-white">{m.value}%</span>
                   </div>
-                  <ProgressBar value={92} color="bg-brand-violet" />
+                  <ProgressBar value={m.value} color={m.color} />
                 </div>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                    <span>Citizen Rating</span>
-                    <span className="text-slate-900 dark:text-white">4.8/5</span>
+              ))}
+            </div>
+
+            <div className="mt-6 space-y-3">
+              <div className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-amber-500/20 shadow-inner-glow">
+                <span className="text-2xl">🔥</span>
+                <div>
+                  <p className="text-sm font-bold text-white">Speed Demon</p>
+                  <p className="text-[9px] text-amber-200/70 uppercase tracking-widest">5 resolutions &lt; 12h</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* CENTER: Map label overlays */}
+        <div className="flex-1 relative pointer-events-none">
+          {/* Active task HUD overlay */}
+          <AnimatePresence>
+            {activeTaskData && (
+              <motion.div
+                key={activeTaskData.id}
+                initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 20, scale: 0.95 }}
+                className="absolute bottom-0 left-1/2 -translate-x-1/2 pointer-events-auto w-[500px] glass-premium p-6 rounded-[2rem] border border-neon-cyan/30 shadow-glow-blue bg-[#020617]/80 backdrop-blur-3xl"
+              >
+                <div className="flex items-start gap-5">
+                  <div className="w-14 h-14 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-2xl shadow-inner-glow">
+                    {CATEGORY_META[activeTaskData.category]?.icon || '📋'}
                   </div>
-                  <ProgressBar value={96} color="bg-emerald-500" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] font-black text-neon-cyan uppercase tracking-[0.2em]">{activeTaskData.referenceId}</p>
+                    <h4 className="text-lg font-black text-white truncate">{activeTaskData.title}</h4>
+                    <p className="text-[10px] text-slate-400 mt-1 font-bold flex items-center gap-1.5">
+                      <MapPin size={12} className="text-brand-indigo" /> {activeTaskData.location?.address}
+                    </p>
+                  </div>
+                  <button onClick={() => setActiveTask(null)} className="text-slate-500 hover:text-white transition-colors text-xl leading-none">×</button>
                 </div>
-              </div>
-              <Button variant="ghost" size="sm" className="w-full mt-8 text-primary-400">View Performance Report</Button>
-            </Card>
+                <div className="flex gap-3 mt-5">
+                  <Link to={`/complaints/track/${activeTaskData.referenceId}`} className="flex-1">
+                    <Button size="md" variant="outline" className="w-full border-white/20 text-[10px] tracking-widest">NAVIGATE</Button>
+                  </Link>
+                  <Button
+                    size="md" glow
+                    className="flex-1 bg-gradient-to-r from-emerald-500 to-emerald-400 border-none shadow-glow-emerald text-[10px] tracking-widest text-white"
+                    onClick={() => {
+                      updateComplaintStatus(activeTaskData.id, 'resolved', activeTaskData.citizenId, activeTaskData.referenceId, 'Resolved by field officer', user?.id || '')
+                      setActiveTask(null)
+                    }}
+                  >
+                    COMPLETE
+                  </Button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-            <Card className="p-6">
-              <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-6 uppercase tracking-widest flex items-center gap-2">
-                <Award size={16} className="text-amber-400" /> Active Shift Awards
-              </h3>
-              <div className="flex items-center gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/5 mb-4">
-                <div className="text-2xl">🔥</div>
-                <div>
-                  <p className="text-xs font-bold text-slate-900 dark:text-white">Speed Demon</p>
-                  <p className="text-[10px] text-slate-500 mt-0.5">5 resolutions in under 12 hours</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/5 opacity-40 grayscale">
-                <div className="text-2xl">🤝</div>
-                <div>
-                  <p className="text-xs font-bold text-slate-900 dark:text-white">Community Fav</p>
-                  <p className="text-[10px] text-slate-500 mt-0.5">10 positive feedback ratings</p>
-                </div>
-              </div>
-            </Card>
-
-            <div className="p-6 rounded-3xl bg-primary-500/5 border border-primary-500/10">
-              <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-                <AlertTriangle size={16} className="text-primary-400" /> Internal Broadcast
-              </h4>
-              <p className="text-xs text-slate-500 leading-relaxed italic">
-                "Heavy rainfall expected in North Ward tonight. All officers on standby for drainage related complaints."
-              </p>
-              <p className="text-[10px] text-slate-600 font-bold uppercase mt-4">— Command Center</p>
+          {/* Map counter badge */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 pointer-events-auto">
+            <div className="glass-premium px-6 py-3 rounded-[1.25rem] border border-white/10 shadow-glow-blue backdrop-blur-3xl flex items-center gap-3">
+              <span className="w-2 h-2 rounded-full bg-neon-cyan shadow-[0_0_8px_rgba(6,182,212,0.8)] animate-pulse" />
+              <p className="text-[10px] font-black text-white uppercase tracking-[0.2em]">{myTasks.length} Active Targets on Grid</p>
             </div>
           </div>
         </div>
+
+        {/* RIGHT: Task Queue */}
+        <motion.div
+          initial={{ opacity: 0, x: 30 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="w-96 flex flex-col pointer-events-auto"
+        >
+          <div className="glass-premium flex-1 rounded-[2rem] border border-white/10 shadow-glow-lg panel-shine bg-[#020617]/60 backdrop-blur-3xl overflow-hidden flex flex-col">
+            <div className="p-6 border-b border-white/5 bg-white/[0.02] flex items-center justify-between">
+              <h3 className="text-xs font-black text-white uppercase tracking-[0.2em] flex items-center gap-2">
+                <ClipboardList size={14} className="text-neon-cyan" /> Priority Queue
+                <Badge variant="info" className="ml-1">{myTasks.length}</Badge>
+              </h3>
+              <button className="text-[9px] font-black text-slate-500 hover:text-neon-cyan uppercase tracking-widest transition-colors">SORT SLA</button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-3">
+              {myTasks.map((task, i) => (
+                <motion.div
+                  key={task.id}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.06 }}
+                  onClick={() => { setActiveTask(task.id === activeTask ? null : task.id); setMapCenter([task.location.lat, task.location.lng]) }}
+                  className={clsx(
+                    'p-4 rounded-2xl border cursor-pointer transition-all group relative overflow-hidden',
+                    activeTask === task.id
+                      ? 'border-neon-cyan/40 bg-neon-cyan/5 shadow-glow-blue'
+                      : 'border-white/5 hover:border-brand-indigo/40 hover:bg-white/5'
+                  )}
+                >
+                  {activeTask === task.id && <div className="absolute left-0 top-0 bottom-0 w-1 bg-neon-cyan" />}
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-lg shadow-inner-glow flex-shrink-0">
+                      {CATEGORY_META[task.category]?.icon || '📋'}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-1">
+                        <p className="text-[9px] font-black text-brand-indigo uppercase tracking-[0.2em]">{task.referenceId}</p>
+                        <Badge variant={task.severity >= 7 ? 'error' : 'info'} className="text-[8px]">Sev {task.severity}</Badge>
+                      </div>
+                      <h4 className={clsx('text-sm font-black leading-tight truncate transition-colors', activeTask === task.id ? 'text-neon-cyan' : 'text-white group-hover:text-neon-cyan')}>
+                        {task.title}
+                      </h4>
+                      <div className="flex items-center gap-3 mt-2">
+                        <span className="text-[9px] text-slate-400 font-bold flex items-center gap-1">
+                          <MapPin size={10} className="text-brand-indigo" /> {task.ward}
+                        </span>
+                        <span className="w-0.5 h-0.5 rounded-full bg-white/20" />
+                        <span className="text-[9px] text-slate-400 font-bold flex items-center gap-1">
+                          <Clock size={10} className="text-neon-cyan" /> {formatDistanceToNow(new Date(task.createdAt), { addSuffix: true })}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex gap-2 mt-3 pt-3 border-t border-white/5">
+                    <Link to={`/complaints/track/${task.referenceId}`} className="flex-1">
+                      <Button size="sm" variant="outline" className="w-full border-white/20 text-[9px] tracking-widest hover:bg-white/5">NAVIGATE</Button>
+                    </Link>
+                    <Button
+                      size="sm" glow
+                      className="flex-1 bg-gradient-to-r from-emerald-500 to-emerald-400 border-none shadow-glow-emerald text-[9px] tracking-widest text-white"
+                      onClick={(e) => { e.stopPropagation(); updateComplaintStatus(task.id, 'resolved', task.citizenId, task.referenceId, 'Resolved by field officer', user?.id || '') }}
+                    >
+                      COMPLETE
+                    </Button>
+                  </div>
+                </motion.div>
+              ))}
+
+              {myTasks.length === 0 && (
+                <div className="py-16 flex flex-col items-center justify-center text-center">
+                  <div className="text-4xl mb-4 opacity-50">🎉</div>
+                  <h3 className="text-sm font-black text-white uppercase tracking-[0.1em]">Area Clear</h3>
+                  <p className="text-[10px] text-slate-500 uppercase tracking-widest mt-1">All tasks completed.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </motion.div>
       </div>
     </div>
   )

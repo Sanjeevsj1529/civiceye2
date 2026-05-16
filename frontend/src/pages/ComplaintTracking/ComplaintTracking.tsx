@@ -47,10 +47,15 @@ export default function ComplaintTracking() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-100 dark:bg-dark-950 pt-24 pb-20 px-6 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-slate-400 font-bold uppercase tracking-widest animate-pulse">Fetching Report Intel...</p>
+      <div className="relative min-h-screen overflow-hidden bg-[#020617] pt-24 pb-20 px-6 flex items-center justify-center">
+        <div className="pointer-events-none absolute inset-0 bg-mesh opacity-20" />
+        <div className="absolute left-1/4 top-1/3 h-96 w-96 -translate-x-1/2 rounded-full bg-brand-indigo/15 blur-[120px] animate-pulse-slow" />
+        <div className="relative text-center">
+          <div className="relative mx-auto mb-8 h-20 w-20">
+            <div className="absolute inset-0 animate-spin rounded-3xl border-2 border-white/10 border-t-neon-cyan drop-shadow-lg" />
+            <div className="absolute inset-4 rounded-2xl bg-gradient-to-br from-brand-indigo/60 to-neon-cyan/30 shadow-glow-blue backdrop-blur-md" />
+          </div>
+          <p className="text-xs font-black uppercase tracking-[0.4em] text-slate-400 animate-pulse drop-shadow-sm">Fetching Report Intel...</p>
         </div>
       </div>
     );
@@ -58,11 +63,16 @@ export default function ComplaintTracking() {
 
   if (!complaint) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-slate-100 dark:bg-dark-950">
-        <div className="text-6xl mb-6">🔍</div>
-        <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-2">Complaint Not Found</h2>
-        <p className="text-slate-500 mb-8">We couldn't find a report with reference ID <span className="text-slate-900 dark:text-white font-mono">{id}</span></p>
-        <Link to="/dashboard/citizen"><Button>Back to Dashboard</Button></Link>
+      <div className="relative min-h-screen overflow-hidden bg-[#020617] pt-24 pb-20 px-6 flex items-center justify-center">
+        <div className="pointer-events-none absolute inset-0 bg-noise opacity-[0.15]" />
+        <div className="relative z-10 text-center glass-premium p-12 rounded-[2.5rem] border border-white/10 shadow-glow-lg max-w-lg">
+          <div className="w-24 h-24 rounded-full bg-white/5 flex items-center justify-center text-5xl mx-auto mb-6 shadow-inner-glow border border-white/10">🔍</div>
+          <h2 className="text-2xl font-black text-white mb-3">Target Not Found</h2>
+          <p className="text-slate-400 mb-8 font-medium text-sm">We couldn't locate report registry <span className="text-neon-cyan font-black tracking-widest">{id}</span>.</p>
+          <Link to="/dashboard/citizen">
+            <Button size="lg" glow className="w-full bg-gradient-to-r from-brand-indigo to-neon-cyan text-white border-none">RETURN TO HQ</Button>
+          </Link>
+        </div>
       </div>
     )
   }
@@ -79,94 +89,104 @@ export default function ComplaintTracking() {
   return (
     <div className="min-h-screen pb-20 pt-32 px-6 relative overflow-hidden">
       <div className="pointer-events-none absolute inset-0 z-0 bg-gradient-to-b from-brand-indigo/[0.06] via-transparent to-transparent dark:from-brand-indigo/12" />
-      <FloatingOrbs className="z-0 opacity-75" />
-      <div className="absolute inset-0 z-0 opacity-[0.35] dark:opacity-[0.1] pointer-events-none">
+      <div className="absolute inset-0 z-0 opacity-[0.35] dark:opacity-[0.12] pointer-events-none">
         <div className="absolute inset-0 bg-noise" />
         <div className="absolute top-0 left-0 w-full h-full bg-dots [background-size:40px_40px] animate-grid-pan" />
+        <div className="absolute -top-40 left-1/4 h-[500px] w-[500px] rounded-full bg-brand-indigo/20 blur-[120px]" />
+        <div className="absolute bottom-0 right-1/4 h-[400px] w-[400px] rounded-full bg-neon-cyan/10 blur-[100px]" />
       </div>
 
       <div className="max-w-[1400px] mx-auto relative z-10">
         {/* Back Link */}
         <Link 
-          to="/dashboard/citizen" 
-          className="inline-flex items-center gap-3 text-[10px] font-black text-slate-500 hover:text-brand-indigo dark:text-slate-400 mb-12 transition-all uppercase tracking-[0.2em]"
+          to={user?.role === 'citizen' ? '/dashboard/citizen' : user?.role === 'officer' ? '/dashboard/officer' : '/dashboard/admin'} 
+          className="inline-flex items-center gap-3 text-[10px] font-black text-slate-400 hover:text-neon-cyan mb-10 transition-all uppercase tracking-[0.2em] group"
         >
-          <ChevronLeft size={14} /> Return to Mission Control
+          <div className="p-2 rounded-full bg-white/5 border border-white/10 group-hover:border-neon-cyan/50 group-hover:bg-neon-cyan/10 transition-all">
+            <ChevronLeft size={14} className="group-hover:-translate-x-1 transition-transform" /> 
+          </div>
+          Return to Mission Control
         </Link>
 
         <div className="grid lg:grid-cols-12 gap-10">
           {/* Main Panel: 8 Cols */}
           <div className="lg:col-span-8 space-y-10">
             {/* Header Card */}
-            <Card className="p-10 border-2 border-slate-200 dark:border-white/5 bg-white dark:bg-white/5 relative overflow-hidden shadow-soft">
-              <div className="absolute top-0 right-0 p-6">
-                <Badge className={clsx(
-                  'px-6 py-2 text-[10px] font-black uppercase tracking-[0.2em] rounded-full shadow-handcrafted border-none',
-                  statusMeta.bg === 'bg-emerald-500/10' ? 'bg-emerald-500 text-white' : 
-                  statusMeta.bg === 'bg-amber-500/10' ? 'bg-amber-500 text-white' : 
-                  'bg-brand-indigo text-white'
-                )}>
-                  {statusMeta.label}
-                </Badge>
-              </div>
+            <Card className="p-0 border border-white/10 glass-premium relative overflow-hidden shadow-glow-lg panel-shine">
+              <div className="absolute inset-0 bg-noise opacity-10 mix-blend-overlay pointer-events-none" />
+              <div className="absolute top-0 right-0 w-64 h-64 bg-brand-indigo/10 blur-[80px] rounded-full z-0" />
               
-              <div className="flex flex-col md:flex-row items-start gap-10">
-                <div className="w-32 h-32 rounded-handcrafted bg-slate-100 dark:bg-dark-950 flex items-center justify-center text-6xl shadow-inner border-2 border-slate-200 dark:border-white/5 relative overflow-hidden group shrink-0">
-                  {complaint.media && complaint.media[0] ? (
-                    <img 
-                      src={complaint.media[0].url} 
-                      className="w-full h-full object-cover transition-transform group-hover:scale-110" 
-                      alt="Primary evidence" 
-                    />
-                  ) : (
-                    <span className="grayscale opacity-50">{meta.icon}</span>
-                  )}
+              <div className="p-10 relative z-10">
+                <div className="absolute top-10 right-10">
+                  <Badge className={clsx(
+                    'px-6 py-2.5 text-[10px] font-black uppercase tracking-[0.2em] rounded-full border-none shadow-lg backdrop-blur-md',
+                    statusMeta.bg === 'bg-emerald-500/10' ? 'bg-emerald-500/20 text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.3)] border border-emerald-500/30' : 
+                    statusMeta.bg === 'bg-amber-500/10' ? 'bg-amber-500/20 text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.3)] border border-amber-500/30' : 
+                    'bg-brand-indigo/20 text-neon-cyan shadow-[0_0_15px_rgba(79,70,229,0.3)] border border-brand-indigo/30'
+                  )}>
+                    {statusMeta.label}
+                  </Badge>
                 </div>
                 
-                <div className="flex-1">
-                  <div className="flex items-center gap-4 mb-4">
-                    <span className="text-[10px] font-black text-brand-indigo uppercase tracking-[0.3em]">{complaint.referenceId}</span>
-                    <div className="h-px w-8 bg-slate-200 dark:bg-white/10" />
-                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{complaint.createdAt ? format(new Date(complaint.createdAt), 'MMM d, yyyy') : 'Recently'}</span>
+                <div className="flex flex-col md:flex-row items-start gap-10">
+                  <div className="w-32 h-32 rounded-[2rem] bg-white/5 flex items-center justify-center text-6xl shadow-inner-glow border border-white/10 relative overflow-hidden group shrink-0 backdrop-blur-sm">
+                    {complaint.media && complaint.media[0] ? (
+                      <img 
+                        src={complaint.media[0].url} 
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                        alt="Primary evidence" 
+                      />
+                    ) : (
+                      <span className="drop-shadow-lg group-hover:scale-110 transition-transform">{meta.icon}</span>
+                    )}
+                    <div className="absolute inset-0 shadow-[inset_0_0_20px_rgba(0,0,0,0.5)] pointer-events-none" />
                   </div>
                   
-                  <h1 className="text-4xl md:text-5xl font-black text-brand-navy dark:text-white mb-6 tracking-tighter leading-[0.95]">
-                    {complaint.title}
-                  </h1>
-                  
-                  <div className="flex flex-wrap items-center gap-8">
-                    <div className="flex items-center gap-3 text-slate-500 dark:text-slate-400 text-xs font-bold">
-                      <MapPin size={16} className="text-brand-indigo" /> {complaint.location.address}
+                  <div className="flex-1 mt-2">
+                    <div className="flex items-center gap-4 mb-4">
+                      <span className="text-[10px] font-black text-neon-cyan uppercase tracking-[0.3em] drop-shadow-sm">{complaint.referenceId}</span>
+                      <div className="h-px w-8 bg-white/20" />
+                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{complaint.createdAt ? format(new Date(complaint.createdAt), 'MMM d, yyyy') : 'Recently'}</span>
                     </div>
-                    <div className="flex items-center gap-3 text-slate-500 dark:text-slate-400 text-xs font-bold">
-                      <Shield size={16} className="text-brand-indigo" /> Severity {complaint.severity}/10
+                    
+                    <h1 className="text-4xl md:text-5xl font-black text-white mb-6 tracking-tighter leading-[0.95] drop-shadow-md pr-32">
+                      {complaint.title}
+                    </h1>
+                    
+                    <div className="flex flex-wrap items-center gap-8">
+                      <div className="flex items-center gap-3 text-slate-300 text-xs font-bold tracking-wide">
+                        <MapPin size={16} className="text-brand-indigo drop-shadow-[0_0_8px_rgba(79,70,229,0.8)]" /> {complaint.location.address}
+                      </div>
+                      <div className="flex items-center gap-3 text-slate-300 text-xs font-bold tracking-wide">
+                        <Shield size={16} className="text-rose-500 drop-shadow-[0_0_8px_rgba(244,63,94,0.8)]" /> Severity {complaint.severity}/10
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Action Bar */}
-              <div className="mt-12 pt-10 border-t-2 border-slate-100 dark:border-white/5 flex flex-wrap items-center justify-between gap-6">
-                <div className="flex items-center gap-4">
-                  <Button variant="outline" size="xl" onClick={() => user && upvoteComplaint(complaint.id, user.id)} className="btn-handcrafted px-8 border-2 border-brand-navy dark:border-white/20 text-brand-navy dark:text-white">
-                    👍 <span className="font-black ml-2">{complaint.upvotes} Upvotes</span>
-                  </Button>
-                  <Button variant="ghost" size="xl" className="btn-handcrafted text-brand-indigo font-black uppercase tracking-widest text-[10px]">
-                    <Share2 size={18} className="mr-3" /> Copy Case Link
-                  </Button>
-                </div>
-                
-                <div className="flex items-center gap-4">
-                  <div className="px-5 py-2 rounded-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/5">
-                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-tighter">Est. Completion</p>
-                    <p className="text-xs font-black text-brand-navy dark:text-white mt-0.5">{complaint.estimatedResolutionDays} Days Remaining</p>
+                {/* Action Bar */}
+                <div className="mt-12 pt-8 border-t border-white/10 flex flex-wrap items-center justify-between gap-6">
+                  <div className="flex flex-wrap items-center gap-4">
+                    <Button variant="outline" size="xl" glow onClick={() => user && upvoteComplaint(complaint.id, user.id)} className="bg-white/5 border-white/20 text-white hover:bg-brand-indigo/20 hover:border-brand-indigo/50 hover:shadow-glow-blue transition-all">
+                      <span className="text-xl mr-2">👍</span> <span className="font-black tracking-widest text-[10px] uppercase">{complaint.upvotes} Upvotes</span>
+                    </Button>
+                    <Button variant="ghost" size="xl" className="text-slate-400 hover:text-white hover:bg-white/5 font-black uppercase tracking-widest text-[10px]">
+                      <Share2 size={16} className="mr-3 text-neon-cyan" /> Copy Link
+                    </Button>
+                  </div>
+                  
+                  <div className="flex items-center gap-4">
+                    <div className="px-6 py-3 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm shadow-inner-glow">
+                      <p className="text-[9px] font-black text-slate-500 uppercase tracking-tighter mb-1">Est. Completion</p>
+                      <p className="text-xs font-black text-white drop-shadow-sm">{complaint.estimatedResolutionDays} Days Remaining</p>
+                    </div>
                   </div>
                 </div>
               </div>
             </Card>
 
             {/* Navigation Tabs */}
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3 relative z-10">
               {[
                 { id: 'timeline', label: 'Mission Log', icon: <Clock size={16} /> },
                 { id: 'details', label: 'Evidence', icon: <AlertCircle size={16} /> },
@@ -176,10 +196,10 @@ export default function ComplaintTracking() {
                   key={t.id}
                   onClick={() => setActiveTab(t.id as any)}
                   className={clsx(
-                    'flex items-center gap-3 px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 border-2',
+                    'flex items-center gap-3 px-8 py-3.5 rounded-[1.25rem] text-[10px] font-black uppercase tracking-widest transition-all duration-300 border backdrop-blur-md',
                     activeTab === t.id 
-                      ? 'bg-brand-navy text-white border-brand-navy dark:bg-white dark:text-brand-navy dark:border-white shadow-handcrafted' 
-                      : 'text-slate-500 border-slate-200 dark:border-white/5 hover:border-brand-indigo dark:hover:border-white/20'
+                      ? 'bg-brand-indigo/20 text-white border-brand-indigo/50 shadow-glow-blue' 
+                      : 'bg-white/5 text-slate-400 border-white/10 hover:border-white/30 hover:bg-white/10'
                   )}
                 >
                   {t.icon} {t.label}
@@ -195,48 +215,50 @@ export default function ComplaintTracking() {
                   initial={{ opacity: 0, y: 10 }} 
                   animate={{ opacity: 1, y: 0 }} 
                   exit={{ opacity: 0, y: -10 }}
-                  className="space-y-8"
+                  className="space-y-8 relative z-10"
                 >
                   {complaint.timeline?.map((event, i) => (
                     <div key={event.id} className="relative pl-16 pb-4">
                       {/* Line */}
                       {i < (complaint.timeline?.length || 0) - 1 && (
-                        <div className="absolute left-[31px] top-12 bottom-0 w-[3px] rounded-full bg-gradient-to-b from-brand-indigo/60 via-neon-cyan/35 to-slate-100/80 dark:from-brand-indigo dark:via-neon-cyan/40 dark:to-white/10 shadow-[0_0_12px_rgba(79,70,229,0.35)]" />
+                        <div className="absolute left-[31px] top-12 bottom-0 w-[3px] rounded-full bg-gradient-to-b from-brand-indigo/60 via-neon-cyan/35 to-transparent shadow-[0_0_12px_rgba(79,70,229,0.35)]" />
                       )}
                       
                       {/* Icon Node */}
                       <div className={clsx(
-                        'absolute left-0 top-0 w-16 h-16 rounded-xl flex items-center justify-center text-2xl border-2 transition-all duration-300',
+                        'absolute left-0 top-0 w-16 h-16 rounded-[1.25rem] flex items-center justify-center text-2xl border transition-all duration-300 z-10',
                         i === 0 
-                          ? 'bg-brand-navy text-white border-brand-indigo/80 dark:bg-gradient-to-br dark:from-brand-indigo dark:to-violet-700 shadow-glow-blue ring-2 ring-brand-indigo/30 animate-pulse-glow' 
-                          : 'bg-white dark:bg-dark-950 text-slate-400 border-slate-200 dark:border-white/10 shadow-soft hover:border-brand-indigo/40'
+                          ? 'bg-brand-indigo/20 text-white border-brand-indigo/50 shadow-glow-blue backdrop-blur-md' 
+                          : 'bg-white/5 text-slate-400 border-white/10 shadow-inner-glow backdrop-blur-md'
                       )}>
-                        {event.status === 'submitted' ? '📥' : event.status === 'assigned' ? '👤' : event.status === 'resolved' ? '✅' : '⚙️'}
+                        <span className="drop-shadow-md">{event.status === 'submitted' ? '📥' : event.status === 'assigned' ? '👤' : event.status === 'resolved' ? '✅' : '⚙️'}</span>
                       </div>
 
-                      <div className="glass-premium border border-white/12 bg-white/95 dark:bg-white/[0.06] rounded-2xl p-8 hover:border-brand-indigo/45 hover:shadow-glow-blue transition-all duration-500 group relative overflow-hidden">
-                        <div className="flex items-center justify-between mb-4">
-                          <h4 className="text-xs font-black text-brand-navy dark:text-white uppercase tracking-[0.2em]">{event.status.replace('_', ' ')}</h4>
+                      <div className="glass-premium border border-white/10 bg-white/5 rounded-[2rem] p-8 hover:border-brand-indigo/50 hover:shadow-glow-blue transition-all duration-500 group relative overflow-hidden panel-shine">
+                        <div className="absolute inset-0 bg-noise opacity-[0.05] pointer-events-none mix-blend-overlay" />
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4 relative z-10">
+                          <h4 className="text-sm font-black text-white uppercase tracking-[0.2em] group-hover:text-neon-cyan transition-colors">{event.status.replace('_', ' ')}</h4>
                           <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{event.timestamp ? format(new Date(event.timestamp), 'MMM d · h:mm a') : 'Now'}</span>
                         </div>
-                        <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 font-medium leading-relaxed">{event.note}</p>
+                        <p className="text-sm text-slate-300 mb-8 font-medium leading-relaxed relative z-10">{event.note}</p>
                         
                         {/* Evidence Thumbnails */}
                         {event.status === 'submitted' && complaint.media && complaint.media.length > 0 && (
-                          <div className="flex gap-3 mb-6 overflow-x-auto pb-2">
+                          <div className="flex gap-4 mb-8 overflow-x-auto pb-2 relative z-10 custom-scrollbar">
                             {complaint.media.map(m => (
-                              <div key={m.id} className="w-24 h-24 rounded-xl overflow-hidden border-2 border-slate-100 dark:border-white/5 shrink-0 group/img cursor-pointer">
-                                <img src={m.url} className="w-full h-full object-cover transition-transform group-hover/img:scale-110" alt="Evidence preview" />
+                              <div key={m.id} className="w-28 h-28 rounded-2xl overflow-hidden border border-white/10 shrink-0 group/img cursor-pointer relative shadow-inner-glow">
+                                <img src={m.url} className="w-full h-full object-cover transition-transform duration-500 group-hover/img:scale-110" alt="Evidence preview" />
+                                <div className="absolute inset-0 shadow-[inset_0_0_15px_rgba(0,0,0,0.4)] pointer-events-none" />
                               </div>
                             ))}
                           </div>
                         )}
 
-                        <div className="flex items-center gap-3 pt-6 border-t border-slate-100 dark:border-white/5">
-                          <Avatar name={event.actor} size="sm" className="w-8 h-8 rounded-lg shadow-sm" />
+                        <div className="flex items-center gap-4 pt-6 border-t border-white/10 relative z-10">
+                          <Avatar name={event.actor} size="sm" className="w-10 h-10 rounded-xl shadow-md border border-white/10" />
                           <div className="flex flex-col">
-                            <span className="text-[10px] font-black text-brand-navy dark:text-slate-300 uppercase tracking-tighter">{event.actor}</span>
-                            <span className="text-[8px] font-black text-slate-400 uppercase tracking-[0.2em]">{event.actorRole}</span>
+                            <span className="text-[10px] font-black text-white uppercase tracking-tighter drop-shadow-sm">{event.actor}</span>
+                            <span className="text-[8px] font-black text-brand-indigo uppercase tracking-[0.2em]">{event.actorRole}</span>
                           </div>
                         </div>
                       </div>
@@ -251,26 +273,27 @@ export default function ComplaintTracking() {
                   initial={{ opacity: 0, y: 10 }} 
                   animate={{ opacity: 1, y: 0 }} 
                   exit={{ opacity: 0, y: -10 }}
-                  className="space-y-6"
+                  className="space-y-6 relative z-10"
                 >
-                  <Card className="p-8 border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-white/5">
-                    <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-6">Description</h3>
-                    <p className="text-slate-400 leading-relaxed mb-10">{complaint.description}</p>
+                  <Card className="p-10 border border-white/10 glass-premium panel-shine">
+                    <h3 className="text-sm font-black text-white mb-6 tracking-[0.2em] uppercase">Mission Intel</h3>
+                    <p className="text-slate-300 leading-relaxed mb-10 text-sm font-medium">{complaint.description}</p>
                     
-                    <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-6">Reported Evidence</h3>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                    <h3 className="text-sm font-black text-white mb-6 tracking-[0.2em] uppercase mt-12">Visual Evidence</h3>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-6">
                       {complaint.media && complaint.media.length > 0 ? (
                         complaint.media.map(m => (
-                          <div key={m.id} className="aspect-square rounded-3xl overflow-hidden border border-slate-200 dark:border-white/5 group cursor-pointer relative">
-                            <img src={m.url} alt={m.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                              <span className="text-[10px] font-bold text-white uppercase tracking-widest">View Full</span>
+                          <div key={m.id} className="aspect-square rounded-3xl overflow-hidden border border-white/10 group cursor-pointer relative shadow-inner-glow">
+                            <img src={m.url} alt={m.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                            <div className="absolute inset-0 shadow-[inset_0_0_30px_rgba(0,0,0,0.5)] pointer-events-none transition-opacity" />
+                            <div className="absolute inset-0 bg-[#020617]/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
+                              <span className="text-[10px] font-black text-neon-cyan uppercase tracking-[0.2em] drop-shadow-md">EXPAND</span>
                             </div>
                           </div>
                         ))
                       ) : (
-                        <div className="col-span-full p-12 text-center border-2 border-dashed border-white/5 rounded-[2rem]">
-                          <p className="text-slate-500 text-sm font-medium">No visual evidence attached to this report.</p>
+                        <div className="col-span-full p-16 text-center border border-dashed border-white/10 rounded-[2.5rem] bg-white/[0.02]">
+                          <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest">No visual telemetry provided.</p>
                         </div>
                       )}
                     </div>
@@ -284,52 +307,53 @@ export default function ComplaintTracking() {
                   initial={{ opacity: 0, y: 10 }} 
                   animate={{ opacity: 1, y: 0 }} 
                   exit={{ opacity: 0, y: -10 }}
-                  className="flex flex-col h-[600px] glass rounded-3xl overflow-hidden border-slate-200 dark:border-white/5"
+                  className="flex flex-col h-[600px] glass-premium rounded-[2.5rem] overflow-hidden border border-white/10 shadow-glow-lg relative z-10"
                 >
+                  <div className="absolute inset-0 bg-noise opacity-10 pointer-events-none mix-blend-overlay" />
                   {/* Chat Header */}
-                  <div className="p-4 border-b border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-white/5 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+                  <div className="p-6 border-b border-white/10 bg-white/5 flex items-center justify-between backdrop-blur-md relative z-10">
+                    <div className="flex items-center gap-4">
+                      <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
                       <div>
-                        <p className="text-xs font-bold text-slate-900 dark:text-white">Officer Ramesh Kumar</p>
-                        <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Assigned Responder</p>
+                        <p className="text-sm font-black text-white">Officer Ramesh Kumar</p>
+                        <p className="text-[10px] text-neon-cyan uppercase tracking-[0.2em] font-black mt-0.5">Assigned Responder</p>
                       </div>
                     </div>
-                    <Button variant="ghost" size="sm" className="rounded-xl"><Phone size={14} /></Button>
+                    <Button variant="ghost" size="md" className="rounded-2xl border border-white/5 hover:bg-white/10 text-white"><Phone size={16} /></Button>
                   </div>
 
                   {/* Messages Area */}
-                  <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
+                  <div className="flex-1 overflow-y-auto p-8 space-y-8 custom-scrollbar relative z-10 bg-[#020617]/20">
                     <div className="flex justify-center">
-                      <Badge className="bg-slate-50 dark:bg-dark-900 border border-slate-200 dark:border-white/5 text-slate-600">Chat started on {format(new Date(complaint.createdAt), 'MMM d')}</Badge>
+                      <Badge className="bg-white/5 border border-white/10 text-slate-400 font-black tracking-widest text-[9px] px-4 py-1.5 backdrop-blur-sm">COMMS INITIATED: {format(new Date(complaint.createdAt), 'MMM d')}</Badge>
                     </div>
                     
                     {complaint.comments?.map(c => (
                       <div key={c.id} className={clsx('flex flex-col', c.authorRole === 'citizen' ? 'items-end' : 'items-start')}>
                         <div className={clsx(
-                          'max-w-[80%] p-4 rounded-2xl text-sm leading-relaxed',
-                          c.authorRole === 'citizen' ? 'bg-primary-500 text-slate-900 dark:text-white rounded-tr-none' : 'bg-white/10 text-slate-300 rounded-tl-none'
+                          'max-w-[80%] p-5 rounded-3xl text-sm leading-relaxed border backdrop-blur-md',
+                          c.authorRole === 'citizen' ? 'bg-brand-indigo/30 border-brand-indigo/50 text-white rounded-tr-none shadow-glow-blue' : 'bg-white/10 border-white/10 text-slate-200 rounded-tl-none shadow-inner-glow'
                         )}>
                           {c.text}
                         </div>
-                        <span className="text-[10px] text-slate-600 font-bold mt-2 uppercase tracking-tighter">
-                          {c.authorName} · {formatDistanceToNow(new Date(c.timestamp), { addSuffix: true })}
+                        <span className="text-[9px] text-slate-500 font-black mt-2 uppercase tracking-[0.2em]">
+                          {c.authorName} <span className="mx-1 text-white/20">|</span> {formatDistanceToNow(new Date(c.timestamp), { addSuffix: true })}
                         </span>
                       </div>
                     ))}
                   </div>
 
                   {/* Input Area */}
-                  <div className="p-4 bg-slate-100 dark:bg-dark-950 border-t border-slate-200 dark:border-white/5 flex gap-3">
+                  <div className="p-6 bg-white/5 border-t border-white/10 flex gap-4 backdrop-blur-md relative z-10">
                     <input 
-                      placeholder="Type a message to the officer..."
-                      className="flex-1 bg-slate-50 dark:bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white focus:border-primary-500/50 outline-none transition-all"
+                      placeholder="Transmit message to ops..."
+                      className="flex-1 bg-[#020617]/50 border border-white/10 rounded-[1.25rem] px-6 py-4 text-sm text-white placeholder:text-slate-500 focus:border-brand-indigo focus:bg-white/10 outline-none transition-all shadow-inner-glow"
                       value={commentText}
                       onChange={e => setCommentText(e.target.value)}
                       onKeyDown={e => e.key === 'Enter' && handleAddComment()}
                     />
-                    <Button size="sm" className="px-5" onClick={handleAddComment}>
-                      <Send size={16} />
+                    <Button size="xl" glow className="px-6 bg-gradient-to-r from-brand-indigo to-neon-cyan border-none text-white shadow-glow-blue" onClick={handleAddComment}>
+                      <Send size={18} />
                     </Button>
                   </div>
                 </motion.div>
@@ -338,70 +362,71 @@ export default function ComplaintTracking() {
           </div>
 
           {/* Sidebar: 4 Cols */}
-          <div className="lg:col-span-4 space-y-6">
+          <div className="lg:col-span-4 space-y-8 relative z-10">
             {/* Resolution Progress */}
-            <Card className="p-8 border-white/10 bg-slate-50 dark:bg-white/5 text-center">
-              <div className="w-20 h-20 rounded-[2rem] bg-primary-500/10 flex items-center justify-center text-4xl mx-auto mb-6 shadow-glow-blue border border-primary-500/10">
-                ⏱️
+            <Card className="p-8 border-white/10 glass-premium text-center relative overflow-hidden group panel-shine">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-neon-cyan/10 blur-2xl rounded-full z-0 group-hover:bg-neon-cyan/20 transition-colors duration-500" />
+              <div className="w-24 h-24 rounded-full bg-white/5 flex items-center justify-center text-5xl mx-auto mb-6 shadow-glow-blue border border-white/10 relative z-10 backdrop-blur-md group-hover:scale-110 transition-transform">
+                <span className="drop-shadow-lg">⏱️</span>
               </div>
-              <h3 className="text-xl font-black text-slate-900 dark:text-white mb-2">Resolving Soon</h3>
-              <p className="text-sm text-slate-500 mb-8">Estimated resolution by Friday, 6:00 PM</p>
-              <div className="space-y-4">
-                <ProgressBar value={40} showLabel />
+              <h3 className="text-xl font-black text-white mb-2 relative z-10 drop-shadow-sm">Resolving Soon</h3>
+              <p className="text-[10px] text-neon-cyan uppercase tracking-widest font-black mb-8 relative z-10">Est: Friday, 6:00 PM</p>
+              <div className="space-y-5 relative z-10">
+                <ProgressBar value={40} color="bg-gradient-to-r from-brand-indigo to-neon-cyan shadow-[0_0_10px_rgba(6,182,212,0.5)]" />
                 <div className="flex justify-between text-[8px] font-black text-slate-500 uppercase tracking-tighter">
-                  <span className={clsx(complaint.status === 'submitted' && 'text-primary-500')}>Received</span>
-                  <span className={clsx(complaint.status === 'assigned' && 'text-primary-500')}>Confirming</span>
-                  <span className={clsx(complaint.status === 'in_progress' && 'text-primary-500')}>Assigning</span>
-                  <span className={clsx(complaint.status === 'in_progress' && 'text-primary-500')}>On Field</span>
-                  <span className={clsx(complaint.status === 'resolved' && 'text-primary-500')}>Resolved</span>
+                  <span className={clsx(complaint.status === 'submitted' && 'text-neon-cyan drop-shadow-sm')}>Received</span>
+                  <span className={clsx(complaint.status === 'assigned' && 'text-neon-cyan drop-shadow-sm')}>Confirming</span>
+                  <span className={clsx(complaint.status === 'in_progress' && 'text-neon-cyan drop-shadow-sm')}>Assigning</span>
+                  <span className={clsx(complaint.status === 'in_progress' && 'text-neon-cyan drop-shadow-sm')}>On Field</span>
+                  <span className={clsx(complaint.status === 'resolved' && 'text-neon-cyan drop-shadow-sm')}>Resolved</span>
                 </div>
               </div>
             </Card>
 
             {/* Officer Info */}
-            <Card className="p-6 border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-white/5">
-              <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-6 uppercase tracking-widest flex items-center gap-2">
-                <User size={16} className="text-primary-400" /> Assigned Officer
+            <Card className="p-8 border-white/10 glass-premium panel-shine">
+              <h3 className="text-sm font-black text-white mb-6 uppercase tracking-[0.2em] flex items-center gap-3 drop-shadow-sm">
+                <User size={18} className="text-brand-indigo drop-shadow-[0_0_8px_rgba(79,70,229,0.5)]" /> Assigned Officer
               </h3>
-              <div className="flex items-center gap-4 mb-6">
-                <Avatar name="Ramesh Kumar" size="lg" className="w-14 h-14 bg-brand-violet shadow-glow-violet" />
+              <div className="flex items-center gap-5 mb-8">
+                <Avatar name="Ramesh Kumar" size="lg" className="w-16 h-16 bg-gradient-to-br from-[#4f46e5] to-[#8b5cf6] shadow-glow-blue border-2 border-white/20" />
                 <div>
-                  <p className="font-bold text-slate-900 dark:text-white">Inspector Ramesh Kumar</p>
-                  <p className="text-[10px] text-slate-500 uppercase tracking-widest mt-1">Badge: CE-9821</p>
+                  <p className="font-black text-white drop-shadow-sm">Inspector Ramesh Kumar</p>
+                  <p className="text-[10px] text-slate-400 uppercase tracking-widest mt-1 font-black">Badge: CE-9821</p>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="p-3 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/5 text-center">
-                  <p className="text-lg font-bold text-slate-900 dark:text-white">4.8</p>
-                  <p className="text-[10px] text-slate-600 uppercase tracking-tighter">Rating</p>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-4 rounded-2xl bg-white/5 border border-white/10 text-center shadow-inner-glow hover:bg-white/10 transition-colors">
+                  <p className="text-xl font-black text-white drop-shadow-sm">4.8</p>
+                  <p className="text-[10px] text-neon-cyan uppercase tracking-widest font-black mt-1">Rating</p>
                 </div>
-                <div className="p-3 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/5 text-center">
-                  <p className="text-lg font-bold text-slate-900 dark:text-white">18h</p>
-                  <p className="text-[10px] text-slate-600 uppercase tracking-tighter">Avg Res.</p>
+                <div className="p-4 rounded-2xl bg-white/5 border border-white/10 text-center shadow-inner-glow hover:bg-white/10 transition-colors">
+                  <p className="text-xl font-black text-white drop-shadow-sm">18h</p>
+                  <p className="text-[10px] text-neon-cyan uppercase tracking-widest font-black mt-1">Avg Res.</p>
                 </div>
               </div>
-              <Button variant="outline" size="sm" className="w-full mt-6">View Officer Profile</Button>
+              <Button variant="outline" size="md" className="w-full mt-8 border-white/20 text-[10px] uppercase tracking-widest font-black hover:bg-white/5">View Full Profile</Button>
             </Card>
 
             {/* Location Context */}
-            <Card className="p-6 border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-white/5">
-              <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-6 uppercase tracking-widest flex items-center gap-2">
-                <MapPin size={16} className="text-emerald-400" /> Area Context
+            <Card className="p-8 border-white/10 glass-premium panel-shine">
+              <h3 className="text-sm font-black text-white mb-6 uppercase tracking-[0.2em] flex items-center gap-3 drop-shadow-sm">
+                <MapPin size={18} className="text-emerald-400 drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]" /> Area Context
               </h3>
-              <div className="h-56 rounded-3xl bg-slate-50 dark:bg-dark-900 border border-slate-200 dark:border-white/5 mb-4 relative overflow-hidden group shadow-inner">
+              <div className="h-64 rounded-[2rem] bg-white/5 border border-white/10 mb-6 relative overflow-hidden group shadow-inner-glow glass-premium">
                 <MapContainer 
                   center={[complaint.location.lat, complaint.location.lng]} 
                   zoom={15} 
-                  className="h-full w-full"
+                  className="h-full w-full custom-dark-map filter saturate-150 contrast-125"
                   zoomControl={false}
                   dragging={true}
                 >
-                  <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                  <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" />
                   <Marker position={[complaint.location.lat, complaint.location.lng]}>
-                    <Popup className="custom-popup">
-                      <div className="p-1">
-                        <p className="text-[10px] font-black text-primary-500 uppercase tracking-widest">{complaint.referenceId}</p>
-                        <p className="text-xs font-bold text-slate-900 mt-1">{complaint.location.address}</p>
+                    <Popup className="custom-cinematic-popup">
+                      <div className="p-2 w-48">
+                        <p className="text-[10px] font-black text-neon-cyan uppercase tracking-[0.2em] drop-shadow-sm">{complaint.referenceId}</p>
+                        <p className="text-xs font-black text-white mt-1 leading-tight">{complaint.location.address}</p>
                       </div>
                     </Popup>
                   </Marker>
@@ -409,49 +434,53 @@ export default function ComplaintTracking() {
                 
                 {/* Floating Map Controls */}
                 <div className="absolute top-4 right-4 z-[1000] flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button className="w-8 h-8 rounded-xl bg-white/90 dark:bg-dark-900/90 shadow-lg border border-white/10 flex items-center justify-center text-slate-900 dark:text-white hover:bg-primary-500 hover:text-white transition-all">
-                    <TrendingUp size={14} />
+                  <button className="w-10 h-10 rounded-[1.25rem] bg-white/10 backdrop-blur-md shadow-glow-blue border border-white/20 flex items-center justify-center text-white hover:bg-brand-indigo transition-all">
+                    <TrendingUp size={16} />
                   </button>
                 </div>
 
-                <div className="absolute bottom-3 right-3 z-[1000]">
+                <div className="absolute bottom-4 right-4 z-[1000]">
                   <Button 
                     size="sm" 
-                    variant="secondary"
-                    className="bg-white/95 dark:bg-dark-900/95 text-primary-600 dark:text-primary-400 font-bold px-3 py-1.5 h-auto rounded-xl shadow-glow-blue border border-primary-500/20"
+                    glow
+                    className="bg-white/10 backdrop-blur-md text-white font-black px-4 py-2 h-auto rounded-2xl shadow-glow-blue border border-white/20 text-[10px] uppercase tracking-widest hover:bg-white/20"
                     onClick={() => window.open(`https://www.google.com/maps?q=${complaint.location.lat},${complaint.location.lng}`, '_blank')}
                   >
-                    🗺️ Open in Google Maps
+                    🗺️ EXTERNAL MAPS
                   </Button>
                 </div>
                 
-                <div className="absolute top-3 left-3 z-[1000] px-3 py-1.5 rounded-xl bg-dark-950/80 backdrop-blur-md border border-white/10 flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  <span className="text-[8px] font-black text-white uppercase tracking-widest">Verified GPS Lock</span>
+                <div className="absolute top-4 left-4 z-[1000] px-4 py-2 rounded-[1.25rem] bg-black/50 backdrop-blur-md border border-white/10 flex items-center gap-3 shadow-inner-glow">
+                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)] animate-pulse" />
+                  <span className="text-[9px] font-black text-white uppercase tracking-[0.2em] drop-shadow-sm">GPS LOCK</span>
                 </div>
               </div>
-              <div className="space-y-3">
+              <div className="space-y-4">
                 <div className="flex justify-between items-center text-xs">
-                  <span className="text-slate-500">Ward</span>
-                  <span className="text-slate-900 dark:text-white font-bold">{complaint.ward}</span>
+                  <span className="text-slate-400 font-black uppercase tracking-widest text-[10px]">Ward Protocol</span>
+                  <span className="text-white font-black drop-shadow-sm">{complaint.ward}</span>
                 </div>
                 <div className="flex justify-between items-center text-xs">
-                  <span className="text-slate-500">Nearby Complaints</span>
-                  <span className="text-slate-900 dark:text-white font-bold">12 Active</span>
+                  <span className="text-slate-400 font-black uppercase tracking-widest text-[10px]">Nearby Targets</span>
+                  <span className="text-white font-black drop-shadow-sm flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.8)] animate-pulse" />
+                    12 Active
+                  </span>
                 </div>
               </div>
             </Card>
 
             {/* Need Help? */}
-            <div className="p-6 rounded-3xl bg-brand-rose/5 border border-brand-rose/10 flex flex-col items-center text-center">
-              <div className="w-10 h-10 rounded-xl bg-brand-rose/10 flex items-center justify-center text-brand-rose mb-4">
-                <Shield size={20} />
+            <div className="p-8 rounded-[2.5rem] bg-gradient-to-br from-rose-500/10 to-rose-900/10 border border-rose-500/20 flex flex-col items-center text-center shadow-[0_0_30px_rgba(244,63,94,0.1)] relative overflow-hidden group">
+              <div className="absolute inset-0 bg-noise opacity-10 mix-blend-overlay pointer-events-none" />
+              <div className="w-16 h-16 rounded-2xl bg-rose-500/20 flex items-center justify-center text-rose-400 mb-6 shadow-[0_0_15px_rgba(244,63,94,0.3)] border border-rose-500/30 group-hover:scale-110 transition-transform relative z-10 backdrop-blur-sm">
+                <Shield size={24} className="drop-shadow-md" />
               </div>
-              <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-2">Need Immediate Help?</h4>
-              <p className="text-[10px] text-slate-500 leading-relaxed mb-4">
-                If this is a life-threatening emergency, please contact 112 directly.
+              <h4 className="text-sm font-black text-white mb-3 uppercase tracking-widest relative z-10 drop-shadow-sm">Emergency Protocol</h4>
+              <p className="text-[10px] text-slate-300 leading-relaxed mb-6 font-medium relative z-10 uppercase tracking-wider">
+                If this escalates to a life-threatening scenario, override and contact 112 directly.
               </p>
-              <Button variant="ghost" size="sm" className="text-brand-rose w-full">Report Inaccuracy</Button>
+              <Button variant="ghost" size="sm" className="text-rose-400 hover:text-white hover:bg-rose-500/20 w-full border border-rose-500/20 uppercase tracking-[0.2em] font-black text-[10px] relative z-10">Report Inaccuracy</Button>
             </div>
           </div>
         </div>

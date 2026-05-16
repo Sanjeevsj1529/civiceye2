@@ -3,8 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Search, Bell, User, Settings, LogOut, Sun, Moon, 
-  Command, Shield, Menu, X, Users, BarChart2, 
-  Map as MapIcon, ClipboardList, Layout, Activity 
+  Command, Menu, X, Layout, Shield, Activity, ClipboardList
 } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
 import { useUIStore } from '../../store/uiStore'
@@ -15,20 +14,10 @@ import { formatDistanceToNow } from 'date-fns'
 
 export function Navbar() {
   const { user, isAuthenticated, logout } = useAuthStore()
-  const { darkMode, toggleDarkMode, toggleCommandPalette, notifications: uiNotifications, sidebarOpen, toggleSidebar } = useUIStore()
+  const { darkMode, toggleDarkMode, toggleCommandPalette, toggleSidebar } = useUIStore()
   const { notifications, unreadCount, initializeNotifications, markAsRead, markAllAsRead } = useNotificationStore()
-  const [scrolled, setScrolled] = useState(false)
-  const [profileOpen, setProfileOpen] = useState(false)
   const [notifOpen, setNotifOpen] = useState(false)
-  const [searchFocused, setSearchFocused] = useState(false)
   const navigate = useNavigate()
-  const location = useLocation()
-
-  useEffect(() => {
-    const handler = () => setScrolled(window.scrollY > 20)
-    window.addEventListener('scroll', handler)
-    return () => window.removeEventListener('scroll', handler)
-  }, [])
 
   useEffect(() => {
     if (user?.id) {
@@ -39,259 +28,102 @@ export function Navbar() {
     }
   }, [user?.id, user?.role, user?.wardId, initializeNotifications]);
 
-  const navLinks = [
-    { label: 'Community', path: '/community', icon: <Users size={16} /> },
-    { label: 'Analytics', path: '/analytics', icon: <BarChart2 size={16} /> },
-    { label: 'City Map', path: '/complaints/map', icon: <MapIcon size={16} /> },
-  ]
-
-  const dropdownItems = [
-    { 
-      icon: <Layout size={16} />, 
-      label: 'My Dashboard', 
-      path: '/dashboard/citizen', 
-      show: user?.role === 'citizen' 
-    },
-    { 
-      icon: <Shield size={16} />, 
-      label: 'Zonal Dashboard', 
-      path: '/dashboard/admin', 
-      show: user?.role === 'zonal_admin' || user?.role === 'admin'
-    },
-    { 
-      icon: <Activity size={16} />, 
-      label: 'Command Center', 
-      path: '/dashboard/admin', 
-      show: user?.role === 'super_admin'
-    },
-    { 
-      icon: <ClipboardList size={16} />, 
-      label: 'Field Operations', 
-      path: '/dashboard/officer', 
-      show: user?.role === 'officer' 
-    },
-    { icon: <User size={16} />, label: 'My Profile', path: '/profile', show: true },
-    { icon: <Settings size={16} />, label: 'Settings', path: '/profile?tab=settings', show: true },
-  ]
-
   return (
     <motion.nav 
-      initial={{ y: -100 }}
-      animate={{ y: 0 }}
-      transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
-      className={clsx(
-        'fixed top-0 left-0 right-0 z-50 py-4 px-6 transition-all duration-500',
-        scrolled 
-          ? clsx(
-              'border-b backdrop-blur-xl transition-all duration-500',
-              darkMode 
-                ? 'border-white/[0.08] bg-[#030712]/85 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.65),0_0_0_1px_rgba(129,140,248,0.12)]' 
-                : 'border-slate-200/90 bg-white/85 shadow-[0_12px_40px_-16px_rgba(15,23,42,0.12)]'
-            )
-          : 'border-b border-transparent bg-transparent'
-      )}
+      initial={{ y: -50, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+      className="fixed top-6 left-6 right-6 z-50 flex justify-between items-start pointer-events-none"
     >
-      <div className="max-w-[1400px] mx-auto flex items-center justify-between gap-8">
-        {/* Logo & Mobile Toggle */}
-        <div className="flex items-center gap-6">
-          <button onClick={toggleSidebar} className="lg:hidden text-slate-500 hover:text-brand-navy dark:text-slate-400 dark:hover:text-white transition-colors">
-            {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
-          </button>
-          <Link to="/" className="flex items-center gap-3 group relative">
-            <div className="w-10 h-10 rounded-lg bg-brand-navy dark:bg-brand-indigo flex items-center justify-center text-xl shadow-handcrafted group-hover:rotate-3 transition-transform duration-300">👁️</div>
-            <span className="font-display font-black text-2xl tracking-tight text-brand-navy dark:text-white">CivicEye</span>
-            <div className="absolute -bottom-1 left-0 w-0 h-0.5 bg-brand-indigo transition-all group-hover:w-full" />
-          </Link>
-
-          {/* Desktop Navigation Links */}
-          <div className="hidden lg:flex items-center gap-1 ml-4">
-            {navLinks.map(link => (
-              <Link 
-                key={link.path} 
-                to={link.path}
-                className={clsx(
-                  "flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all",
-                  location.pathname === link.path 
-                    ? "bg-primary-500/10 text-primary-500" 
-                    : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-50/50 dark:hover:bg-white/5"
-                )}
-              >
-                {link.icon}
-                {link.label}
-              </Link>
-            ))}
-          </div>
+      {/* Top Left: HUD Logo */}
+      <Link to="/" className="pointer-events-auto flex items-center gap-4 group glass-premium px-4 py-3 rounded-2xl border border-white/10 shadow-glow-lg panel-shine">
+        <div className="absolute inset-0 bg-noise opacity-5 mix-blend-overlay" />
+        <div className="w-10 h-10 rounded-[0.8rem] bg-gradient-to-br from-brand-indigo to-neon-cyan flex items-center justify-center text-xl shadow-glow-blue group-hover:scale-110 transition-transform">👁️</div>
+        <div className="relative z-10">
+          <span className="font-display font-black text-xl tracking-tighter text-white drop-shadow-md leading-none block">CivicEye</span>
+          <span className="text-[8px] font-black uppercase tracking-[0.4em] text-neon-cyan">Gov OS</span>
         </div>
+      </Link>
 
-        {/* Desktop Search Bar */}
-        <div className="hidden md:flex flex-1 max-w-lg relative">
-          <div className={clsx(
-            'flex items-center gap-3 w-full px-5 py-2.5 rounded-xl border transition-all duration-500',
-            searchFocused 
-              ? 'bg-white dark:bg-white/5 border-brand-indigo/50 shadow-soft ring-4 ring-brand-indigo/5' 
-              : 'bg-slate-100/50 dark:bg-white/5 border-slate-200/60 dark:border-white/10'
-          )}>
-            <Search size={16} className="text-slate-400 dark:text-slate-500" />
-            <input 
-              onFocus={() => setSearchFocused(true)}
-              onBlur={() => setSearchFocused(false)}
-              onClick={toggleCommandPalette}
-              readOnly
-              placeholder="Search complaints, wards, or officers..." 
-              className="bg-transparent border-none outline-none text-sm text-slate-900 dark:text-white w-full placeholder:text-slate-400 dark:placeholder:text-slate-600 cursor-pointer"
-            />
-            <kbd className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 text-[10px] text-slate-400 font-mono">
-              <Command size={10} /> K
-            </kbd>
-          </div>
-        </div>
+      {/* Top Right: HUD Actions */}
+      <div className="pointer-events-auto flex items-center gap-3">
+        {/* Search */}
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={toggleCommandPalette}
+          className="flex items-center gap-2 px-4 py-3 rounded-2xl glass-premium border border-white/10 text-slate-400 hover:text-white transition-colors panel-shine shadow-lg"
+        >
+          <Search size={16} />
+          <span className="text-[10px] font-black uppercase tracking-widest hidden sm:block">Command [⌘K]</span>
+        </motion.button>
 
-        {/* Actions */}
-        <div className="flex items-center gap-3">
-          <button onClick={toggleDarkMode} className="p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-white/5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all border border-transparent hover:border-slate-200 dark:hover:border-white/10">
-            {darkMode ? <Sun size={20} /> : <Moon size={20} />}
-          </button>
+        {/* Notifications */}
+        <div className="relative">
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setNotifOpen(!notifOpen)}
+            className="flex items-center justify-center w-12 h-12 rounded-2xl glass-premium border border-white/10 text-slate-400 hover:text-white transition-colors panel-shine shadow-lg relative"
+          >
+            <Bell size={18} />
+            {unreadCount > 0 && (
+              <span className="absolute top-2 right-2 flex h-3 w-3 items-center justify-center rounded-full bg-rose-500 shadow-glow-rose border border-[#020617]" />
+            )}
+          </motion.button>
           
-          <div className="relative">
-            <button 
-              onClick={() => setNotifOpen(!notifOpen)}
-              className="p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-white/5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all relative border border-transparent hover:border-slate-200 dark:hover:border-white/10"
-            >
-              <Bell size={20} />
-              {unreadCount > 0 && (
-                <span className="absolute top-2 right-2 w-4 h-4 bg-brand-rose text-[8px] font-black text-white flex items-center justify-center rounded-full animate-pulse-glow border-2 border-dark-950">
-                  {unreadCount}
-                </span>
-              )}
-            </button>
-
-            <AnimatePresence>
-              {notifOpen && (
-                <>
-                  <div className="fixed inset-0 z-10" onClick={() => setNotifOpen(false)} />
-                  <motion.div 
-                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                    className="absolute right-0 mt-3 w-80 glass border border-slate-300 dark:border-white/10 rounded-3xl shadow-2xl z-20 overflow-hidden"
-                  >
-                    <div className="p-4 border-b border-slate-200 dark:border-white/5 flex items-center justify-between bg-white/5">
-                      <h4 className="text-xs font-black uppercase tracking-widest text-slate-900 dark:text-white">Alert Center</h4>
-                      <button onClick={markAllAsRead} className="text-[10px] font-bold text-primary-500 hover:text-primary-400">Mark all read</button>
-                    </div>
-                    <div className="max-h-[400px] overflow-y-auto custom-scrollbar">
-                      {notifications.length > 0 ? (
-                        notifications.map(n => (
-                          <div 
-                            key={n.id} 
-                            onClick={() => {
-                              markAsRead(n.id);
-                              navigate(`/complaints/track/${n.referenceId}`);
-                              setNotifOpen(false);
-                            }}
-                            className={clsx(
-                              'p-4 border-b border-slate-200 dark:border-white/5 cursor-pointer transition-all hover:bg-white/5',
-                              !n.isRead && 'bg-primary-500/5 border-l-4 border-l-primary-500'
-                            )}
-                          >
-                            <div className="flex items-start gap-3">
-                              <div className={clsx(
-                                'w-8 h-8 rounded-xl flex items-center justify-center text-sm',
-                                n.type === 'status_change' ? 'bg-amber-500/10 text-amber-500' : 'bg-primary-500/10 text-primary-500'
-                              )}>
-                                {n.type === 'status_change' ? '⚡' : '💬'}
-                              </div>
-                              <div className="flex-1">
-                                <p className="text-xs font-bold text-slate-900 dark:text-white">{n.title}</p>
-                                <p className="text-[10px] text-slate-500 mt-1 leading-relaxed">{n.message}</p>
-                                <p className="text-[8px] text-slate-600 mt-2 font-bold uppercase">
-                                  {n.createdAt?.seconds ? formatDistanceToNow(n.createdAt.toDate(), { addSuffix: true }) : 'just now'}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        ))
-                      ) : (
-                        <div className="p-10 text-center">
-                          <p className="text-slate-500 text-xs font-bold uppercase tracking-widest">All caught up! ✌️</p>
-                        </div>
-                      )}
-                    </div>
-                  </motion.div>
-                </>
-              )}
-            </AnimatePresence>
-          </div>
-
-          <div className="h-6 w-px bg-slate-200 dark:bg-white/10 mx-2 hidden sm:block" />
-
-          {isAuthenticated ? (
-            <div className="relative">
-              <button 
-                onClick={() => setProfileOpen(!profileOpen)}
-                className="flex items-center gap-3 p-1 pr-3 rounded-2xl hover:bg-slate-100 dark:hover:bg-white/5 transition-all border border-transparent hover:border-slate-200 dark:hover:border-white/10"
+          {/* Notification Dropdown (Simplified) */}
+          <AnimatePresence>
+            {notifOpen && (
+              <motion.div 
+                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                className="absolute right-0 mt-4 w-80 glass-premium border border-white/10 rounded-[2rem] shadow-glow-lg z-20 overflow-hidden panel-shine"
               >
-                <Avatar name={user!.name} src={user?.avatar} size="sm" />
-                <div className="hidden lg:block text-left">
-                  <p className="text-xs font-bold text-slate-900 dark:text-white leading-none">{user?.name}</p>
-                  <p className="text-[10px] text-slate-500 font-bold mt-1 uppercase tracking-wider">
-                    {user?.role === 'super_admin' ? 'Super Admin' : 
-                     user?.role === 'zonal_admin' ? 'Zonal Admin' : 
-                     user?.role === 'officer' ? 'Field Worker' : 'Citizen'}
-                  </p>
+                <div className="p-4 border-b border-white/5 flex items-center justify-between">
+                  <h4 className="text-[10px] font-black uppercase tracking-widest text-white">Alert Center</h4>
+                  <button onClick={markAllAsRead} className="text-[9px] font-bold text-neon-cyan uppercase hover:text-white">Clear All</button>
                 </div>
-              </button>
-
-              <AnimatePresence>
-                {profileOpen && (
-                  <>
-                    <div className="fixed inset-0 z-10" onClick={() => setProfileOpen(false)} />
-                    <motion.div 
-                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                      className="absolute right-0 mt-3 w-64 glass border border-slate-300 dark:border-white/10 rounded-3xl shadow-2xl z-20 p-2"
-                    >
-                      <div className="p-4 border-b border-slate-200 dark:border-white/5 mb-2">
-                        <p className="text-sm font-bold text-slate-900 dark:text-white">{user?.email}</p>
-                        <div className="flex items-center gap-2 mt-2">
-                          <Badge variant="info">{user?.rewardPoints} Points</Badge>
-                          <Badge variant="success">Level 4</Badge>
-                        </div>
-                      </div>
-                      
-                      <div className="space-y-1">
-                        {dropdownItems.filter(item => item.show).map(item => (
-                          <button 
-                            key={item.label}
-                            onClick={() => { navigate(item.path); setProfileOpen(false); }}
-                            className="w-full flex items-center gap-3 px-3 py-2 text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 rounded-xl transition-all"
-                          >
-                            {item.icon} {item.label}
-                          </button>
-                        ))}
-                      </div>
-                      
-                      <div className="h-px bg-slate-200 dark:bg-white/5 my-2" />
-                      
-                      <button 
-                        onClick={() => { logout(); navigate('/'); setProfileOpen(false); }}
-                        className="w-full flex items-center gap-3 px-3 py-2 text-sm text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 rounded-xl transition-all font-bold"
+                <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
+                  {notifications.length > 0 ? (
+                    notifications.map(n => (
+                      <div 
+                        key={n.id} 
+                        onClick={() => { markAsRead(n.id); navigate(`/complaints/track/${n.referenceId}`); setNotifOpen(false); }}
+                        className={clsx(
+                          'p-4 border-b border-white/5 cursor-pointer hover:bg-white/5 transition-colors',
+                          !n.isRead && 'bg-brand-indigo/10 border-l-2 border-l-neon-cyan'
+                        )}
                       >
-                        <LogOut size={16} /> Sign Out
-                      </button>
-                    </motion.div>
-                  </>
-                )}
-              </AnimatePresence>
-            </div>
-          ) : (
-            <div className="flex items-center gap-2">
-              <Link to="/login"><Button variant="ghost" size="sm" className="text-slate-900 dark:text-white">Sign In</Button></Link>
-              <Link to="/register"><Button size="sm">Get Started</Button></Link>
-            </div>
-          )}
+                        <p className="text-xs font-bold text-white mb-1">{n.title}</p>
+                        <p className="text-[10px] text-slate-400">{n.message}</p>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="p-8 text-center text-[10px] font-black uppercase text-slate-500 tracking-widest">No Active Alerts</div>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
+
+        {/* Theme Toggle */}
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={toggleDarkMode}
+          className="flex items-center justify-center w-12 h-12 rounded-2xl glass-premium border border-white/10 text-slate-400 hover:text-white transition-colors panel-shine shadow-lg"
+        >
+          {darkMode ? <Sun size={18} /> : <Moon size={18} />}
+        </motion.button>
+
+        {!isAuthenticated && (
+          <div className="flex items-center gap-2 ml-2">
+            <Link to="/login"><Button variant="ghost" className="text-white text-xs font-black uppercase tracking-widest">Login</Button></Link>
+          </div>
+        )}
       </div>
     </motion.nav>
   )
